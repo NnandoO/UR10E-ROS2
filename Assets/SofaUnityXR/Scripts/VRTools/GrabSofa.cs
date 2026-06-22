@@ -4,29 +4,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using SofaUnity;
 
+
 #if ENABLE_INPUT_SYSTEM
-// New input system backends are enabled.
 using UnityEngine.InputSystem;
 #endif
 
 namespace SofaUnityXR
 {
-    /// <summary>
-    /// Used to grab Sofa simulation with attach tools (1 on each hand)
-    /// </summary>
     public class GrabSofa : MonoBehaviour
     {
+        public UnityEngine.XR.Interaction.Toolkit.Interactors.XRDirectInteractor manoIzquierdaXR;
+        public UnityEngine.XR.Interaction.Toolkit.Interactors.XRDirectInteractor manoDerechaXR;
+
 #if ENABLE_INPUT_SYSTEM
-        /// <summary>
-        /// Reference of the right and left brab button (here trigger)
-        /// </summary>
         [SerializeField] private InputActionReference m_leftGripButton = null;
         [SerializeField] private InputActionReference m_rightGripButton = null;
 #endif
 
-        /// <summary>
-        /// Reference to the right and left grab tool (Laser on attach mode)
-        /// </summary>
         [SerializeField] private SofaLaserModel m_leftSofaLaserModel = null;
         [SerializeField] private SofaLaserModel m_rightSofaLaserModel = null;
 
@@ -40,7 +34,6 @@ namespace SofaUnityXR
 #endif
         }
 
-
         private void OnDisable()
         {
 #if ENABLE_INPUT_SYSTEM
@@ -52,37 +45,54 @@ namespace SofaUnityXR
         }
 
 #if ENABLE_INPUT_SYSTEM
-        /// <summary>
-        /// Activate left grab 
-        /// </summary>
-        /// <param name="obj"></param>
+        
+        // --- MANO IZQUIERDA ---
         private void ActivateLeftGrab(InputAction.CallbackContext obj)
         {
+            // Iniciamos el temporizador en lugar de actuar de inmediato
+            StartCoroutine(RetrasoSofaIzquierda());
+        }
+
+        private IEnumerator RetrasoSofaIzquierda()
+        {
+            // 1. Esperamos 5 centésimas de segundo para que Unity agarre el bisturí
+            yield return new WaitForSeconds(0.05f);
+
+            // 2. Ahora sí revisamos el candado. Si Unity agarró algo, abortamos.
+            if (manoIzquierdaXR != null && manoIzquierdaXR.hasSelection)
+            {
+                yield break; 
+            }
+
+            // 3. Si la mano está vacía, jalamos el tejido de SOFA
             m_leftSofaLaserModel.ActivateTool = true;
         }
 
-        /// <summary>
-        /// Desactivate left grab 
-        /// </summary>
-        /// <param name="obj"></param>
         private void DesactivateLeftGrab(InputAction.CallbackContext obj)
         {
+            // Soltar sí debe ser instantáneo
             m_leftSofaLaserModel.ActivateTool = false;
         }
 
-        /// <summary>
-        /// Activate right grab 
-        /// </summary>
-        /// <param name="obj"></param>
+
+        // --- MANO DERECHA ---
         private void ActivateRightGrab(InputAction.CallbackContext obj)
         {
+            StartCoroutine(RetrasoSofaDerecha());
+        }
+
+        private IEnumerator RetrasoSofaDerecha()
+        {
+            yield return new WaitForSeconds(0.05f);
+
+            if (manoDerechaXR != null && manoDerechaXR.hasSelection)
+            {
+                yield break; 
+            }
+
             m_rightSofaLaserModel.ActivateTool = true;
         }
 
-        /// <summary>
-        /// Desactivate right grab 
-        /// </summary>
-        /// <param name="obj"></param>
         private void DesactivateRightGrab(InputAction.CallbackContext obj)
         {
             m_rightSofaLaserModel.ActivateTool = false;

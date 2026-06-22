@@ -170,6 +170,7 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaSphere.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaSphereCollisionHand.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\UI\XRDebugConsole\ButtonLogUI.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Corte_Univ.cs" />
     <Compile Include="Assets\SofaUnity\Tests\api\SceneTestData.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaCollisionModel.cs" />
     <Compile Include="Assets\SofaUnityXR\Scenes\AR\dev_AR_Holes\ArHoleManager.cs" />
