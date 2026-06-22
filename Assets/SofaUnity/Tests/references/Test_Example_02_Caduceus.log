@@ -1,0 +1,26 @@
+NbrMeshes: 5
+Mesh: HexahedronFEMForceField  -  FEM
+NbrVertices: 456
+NbrTriangles: 684
+Center: 0.6097851;25.80995;1.052444
+Min: 21.27641;47.17387;21.12146
+Mesh: OglModel  -  VisualBody
+NbrVertices: 3966
+NbrTriangles: 7456
+Center: 1.418086;22.5977;0.3367691
+Min: 20.67967;41.83574;22.42932
+Mesh: OglModel  -  VisualCornea
+NbrVertices: 258
+NbrTriangles: 424
+Center: 0.6467106;41.52025;8.594594
+Min: 1.312203;2.467255;5.465906
+Mesh: OglModel  -  VisualEye
+NbrVertices: 220
+NbrTriangles: 352
+Center: 0.6331955;41.51432;8.542427
+Min: 1.254225;2.445652;5.320622
+Mesh: OglModel  -  OglModel
+NbrVertices: 14660
+NbrTriangles: 7120
+Center: -0.28965;33.38998;-0.1545501
+Min: 25.8103;66.77925;25.1261

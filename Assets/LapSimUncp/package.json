@@ -1,0 +1,15 @@
+{
+  "name": "com.uncp.lapsim",
+  "version": "0.1.1",
+  "displayName": "LapSimUncp Robotics Package",
+  "description": "Simulacion de cirugia laparoscopica con robots Arctos y UR10e, integracion ROS2 y herramientas quirurgicas.",
+  "unity": "2022.3",
+  "dependencies": {
+    "com.unity.inputsystem": "1.7.0",
+    "com.unity.render-pipelines.universal": "17.0.4",
+    "com.unity.robotics.ros-tcp-connector": "https://github.com/Unity-Technologies/ROS-TCP-Connector.git?path=/com.unity.robotics.ros-tcp-connector",
+    "com.unity.robotics.urdf-importer": "https://github.com/Unity-Technologies/URDF-Importer.git?path=/com.unity.robotics.urdf-importer#v0.5.2",
+    "com.unity.ugui": "2.0.0",
+    "com.unity.textmeshpro": "3.0.6"
+  }
+}

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/LapSimUncp/Scenes/SampleScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 2e543829f3e9090449781dff03bc5565, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 8d2eec2d11e28a14ab7bf26077ccf53a, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: d4c00752970c6014a892f2baba74e5ca, type: 2}
+    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: 7f21fb34a1707284dbb3a4964feac775, type: 2}
+  m_UseUCBPForAssetBundles: 0
