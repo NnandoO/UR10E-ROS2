@@ -43,8 +43,8 @@
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_higado" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_higado"/>
         
-        <!-- BoxROI centrada en el centro del hígado (translation 0 0 0) -->
-        <BoxROI template="Vec3d" box="-1 -1 -1 1 1 1" drawBoxes="1" position="@Volume_higado.rest_position" name="FixedROI_higado"/>
+        <!-- BoxROI centrada en 0,0,0 - Tamaño 0.5 -->
+        <BoxROI template="Vec3d" box="-0.5 -0.5 -0.5 0.5 0.5 0.5" drawBoxes="1" position="@Volume_higado.rest_position" name="FixedROI_higado"/>
         <FixedProjectiveConstraint indices="@FixedROI_higado.indices" />
         
         <TetrahedronFEMForceField name="FEM_higado" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_higado" computeVonMisesStress="1"/>
@@ -74,8 +74,8 @@
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_estomago" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_estomago"/>
         
-        <!-- BoxROI centrada en el estómago (translation 15 0 0) -->
-        <BoxROI template="Vec3d" box="14 -1 -1 16 1 1" drawBoxes="1" position="@Volume_estomago.rest_position" name="FixedROI_estomago"/>
+        <!-- BoxROI centrada en 15,0,0 - Tamaño 0.5 -->
+        <BoxROI template="Vec3d" box="14.5 -0.5 -0.5 15.5 0.5 0.5" drawBoxes="1" position="@Volume_estomago.rest_position" name="FixedROI_estomago"/>
         <FixedProjectiveConstraint indices="@FixedROI_estomago.indices" />
         
         <TetrahedronFEMForceField name="FEM_estomago" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_estomago" computeVonMisesStress="1"/>
@@ -105,8 +105,8 @@
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_duodeno" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_duodeno"/>
         
-        <!-- BoxROI centrada en el duodeno (translation -15 0 0) -->
-        <BoxROI template="Vec3d" box="-16 -1 -1 -14 1 1" drawBoxes="1" position="@Volume_duodeno.rest_position" name="FixedROI_duodeno"/>
+        <!-- BoxROI centrada en -15,0,0 - Tamaño 0.5 -->
+        <BoxROI template="Vec3d" box="-15.5 -0.5 -0.5 -14.5 0.5 0.5" drawBoxes="1" position="@Volume_duodeno.rest_position" name="FixedROI_duodeno"/>
         <FixedProjectiveConstraint indices="@FixedROI_duodeno.indices" />
         
         <TetrahedronFEMForceField name="FEM_duodeno" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_duodeno" computeVonMisesStress="1"/>
@@ -136,8 +136,8 @@
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_conducto" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_conducto"/>
         
-        <!-- BoxROI centrada en el conducto biliar (translation 0 0 15) -->
-        <BoxROI template="Vec3d" box="-1 -1 14 1 1 16" drawBoxes="1" position="@Volume_conducto.rest_position" name="FixedROI_conducto"/>
+        <!-- BoxROI centrada en 0,0,15 - Tamaño 0.5 -->
+        <BoxROI template="Vec3d" box="-0.5 -0.5 14.5 0.5 0.5 15.5" drawBoxes="1" position="@Volume_conducto.rest_position" name="FixedROI_conducto"/>
         <FixedProjectiveConstraint indices="@FixedROI_conducto.indices" />
         
         <TetrahedronFEMForceField name="FEM_conducto" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_conducto" computeVonMisesStress="1"/>
@@ -167,8 +167,8 @@
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_vesicula" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_vesicula"/>
         
-        <!-- BoxROI centrada en la vesícula (translation 0 0 -15) -->
-        <BoxROI template="Vec3d" box="-1 -1 -16 1 1 -14" drawBoxes="1" position="@Volume_vesicula.rest_position" name="FixedROI_vesicula"/>
+        <!-- BoxROI centrada en 0,0,-15 - Tamaño 0.5 -->
+        <BoxROI template="Vec3d" box="-0.5 -0.5 -15.5 0.5 0.5 -14.5" drawBoxes="1" position="@Volume_vesicula.rest_position" name="FixedROI_vesicula"/>
         <FixedProjectiveConstraint indices="@FixedROI_vesicula.indices" />
         
         <TetrahedronFEMForceField name="FEM_vesicula" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_vesicula" computeVonMisesStress="1"/>
