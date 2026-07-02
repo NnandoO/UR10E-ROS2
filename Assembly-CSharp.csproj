@@ -99,6 +99,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\GrabSofa.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\UI\LoadingButton.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaRigidPlane.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\ArctosIKUnity.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\ComponentsAPI\SofaVisualModelAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Data\SofaData.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaBox.cs" />
