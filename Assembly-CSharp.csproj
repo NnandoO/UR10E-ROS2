@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaMechanicalMapping.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\SofaContextAPI.cs" />
+    <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaBotonPersonalizado.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Base\SofaBaseData.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\CameraSwitcherVR.cs" />
     <Compile Include="Assets\LapSimUncp\Project\UR10eBridge.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\UI\XRDebugConsole\XR_FPSCounter.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Benchmarks.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Tools\SofaLaserModel.cs" />
+    <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaGrab_Pinza.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\TriggerLaser.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\ObjectController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Topology\TopologyElements.cs" />
@@ -172,6 +174,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaSphereCollisionHand.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\UI\XRDebugConsole\ButtonLogUI.cs" />
     <Compile Include="Assets\LapSimUncp\Project\Corte_Univ.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\LaparoscopiaLimpia.cs" />
     <Compile Include="Assets\SofaUnity\Tests\api\SceneTestData.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaCollisionModel.cs" />
     <Compile Include="Assets\SofaUnityXR\Scenes\AR\dev_AR_Holes\ArHoleManager.cs" />

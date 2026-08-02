@@ -11,11 +11,12 @@ TagManager:
   - RightHandModel
   - LeftHandModel
   - References
+  - Trocar
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Instrumental
   - Water
   - UI
   - 

@@ -29,25 +29,24 @@
     <BruteForceBroadPhase/>
     <BVHNarrowPhase/>
     <CollisionResponse response="PenalityContactForceField" />
-    <MinProximityIntersection name="Proximity" alarmDistance="1.0" contactDistance="0.6" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.1" contactDistance="0.05" />
     <CollisionDetectionDisplay name="CollisionDetectionDisplay"/>
 
-    <!-- ==================== 1. HÍGADO (centro) ==================== -->
+    <!-- ==================== 1. HÍGADO (posición: 0,0,0) ==================== -->
     <Node name="HigadoVolume">
         <EulerImplicitSolver name="cg_odesolver_higado" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
         <CGLinearSolver iterations="25" name="linear_solver_higado" tolerance="1.0e-9" threshold="1.0e-9" />
         <MeshGmshLoader name="loader_higado" filename="HIGADOGMSH.msh" />
-        <MechanicalObject src="@loader_higado" name="Volume_higado" scale3d="20 20 20" rotation="140 180 0" translation="0 0 0"/>
+        <MechanicalObject src="@loader_higado" name="Volume_higado" scale3d="1 1 1" rotation="0 0 0" translation="0 0 0"/>
         <TetrahedronSetTopologyContainer name="TetraContainer_higado" position="@Volume_higado.position" src="@loader_higado" tags=" "/>
         <TetrahedronSetTopologyModifier name="Modifier_higado" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_higado" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_higado"/>
         
-        <!-- BoxROI centrada en 0,0,0 - Tamaño 0.5 -->
-        <BoxROI template="Vec3d" box="-0.5 -0.5 -0.5 0.5 0.5 0.5" drawBoxes="1" position="@Volume_higado.rest_position" name="FixedROI_higado"/>
-        <FixedProjectiveConstraint indices="@FixedROI_higado.indices" />
-        
-        <TetrahedronFEMForceField name="FEM_higado" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_higado" computeVonMisesStress="1"/>
+        <!-- BoxROI para el hígado - caja de 0.2 centrada en el origen -->
+        <BoxROI name="roi_higado" box="-0.1 -0.1 -0.1 0.1 0.1 0.1" drawBoxes="1" />
+        <FixedProjectiveConstraint indices="0 1 2 3 4 5 6 7 8 9" />
+        <TetrahedronFEMForceField name="FEM_higado" youngModulus="100" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_higado" computeVonMisesStress="1"/>
         
         <Node name="HigadoSurface">
             <TriangleSetTopologyContainer name="TriContainer_higado" fileTopology="" tags=" " />
@@ -63,22 +62,21 @@
         </Node>
     </Node>
 
-    <!-- ==================== 2. ESTÓMAGO (X positivo) ==================== -->
+    <!-- ==================== 2. ESTÓMAGO (posición: 0.5,0,0) ==================== -->
     <Node name="EstomagoVolume">
         <EulerImplicitSolver name="cg_odesolver_estomago" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
         <CGLinearSolver iterations="25" name="linear_solver_estomago" tolerance="1.0e-9" threshold="1.0e-9" />
         <MeshGmshLoader name="loader_estomago" filename="ESTOMAGO.msh" />
-        <MechanicalObject src="@loader_estomago" name="Volume_estomago" scale3d="20 20 20" rotation="140 180 0" translation="15 0 0"/>
+        <MechanicalObject src="@loader_estomago" name="Volume_estomago" scale3d="1 1 1" rotation="0 0 0" translation="0.5 0 0"/>
         <TetrahedronSetTopologyContainer name="TetraContainer_estomago" position="@Volume_estomago.position" src="@loader_estomago" tags=" "/>
         <TetrahedronSetTopologyModifier name="Modifier_estomago" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_estomago" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_estomago"/>
         
-        <!-- BoxROI centrada en 15,0,0 - Tamaño 0.5 -->
-        <BoxROI template="Vec3d" box="14.5 -0.5 -0.5 15.5 0.5 0.5" drawBoxes="1" position="@Volume_estomago.rest_position" name="FixedROI_estomago"/>
-        <FixedProjectiveConstraint indices="@FixedROI_estomago.indices" />
-        
-        <TetrahedronFEMForceField name="FEM_estomago" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_estomago" computeVonMisesStress="1"/>
+        <!-- BoxROI para el estómago - caja de 0.2 centrada en (0.5,0,0) -->
+        <BoxROI name="roi_estomago" box="0.4 -0.1 -0.1 0.6 0.1 0.1" drawBoxes="1" />
+        <FixedProjectiveConstraint indices="0 1 2 3 4 5 6 7 8 9" />
+        <TetrahedronFEMForceField name="FEM_estomago" youngModulus="100" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_estomago" computeVonMisesStress="1"/>
         
         <Node name="EstomagoSurface">
             <TriangleSetTopologyContainer name="TriContainer_estomago" fileTopology="" tags=" " />
@@ -94,22 +92,21 @@
         </Node>
     </Node>
 
-    <!-- ==================== 3. DUODENO (X negativo) ==================== -->
+    <!-- ==================== 3. DUODENO (posición: 1.0,0,0) ==================== -->
     <Node name="DuodenoVolume">
         <EulerImplicitSolver name="cg_odesolver_duodeno" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
         <CGLinearSolver iterations="25" name="linear_solver_duodeno" tolerance="1.0e-9" threshold="1.0e-9" />
         <MeshGmshLoader name="loader_duodeno" filename="DUODENO.msh" />
-        <MechanicalObject src="@loader_duodeno" name="Volume_duodeno" scale3d="20 20 20" rotation="140 180 0" translation="-15 0 0"/>
+        <MechanicalObject src="@loader_duodeno" name="Volume_duodeno" scale3d="1 1 1" rotation="0 0 0" translation="1.0 0 0"/>
         <TetrahedronSetTopologyContainer name="TetraContainer_duodeno" position="@Volume_duodeno.position" src="@loader_duodeno" tags=" "/>
         <TetrahedronSetTopologyModifier name="Modifier_duodeno" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_duodeno" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_duodeno"/>
         
-        <!-- BoxROI centrada en -15,0,0 - Tamaño 0.5 -->
-        <BoxROI template="Vec3d" box="-15.5 -0.5 -0.5 -14.5 0.5 0.5" drawBoxes="1" position="@Volume_duodeno.rest_position" name="FixedROI_duodeno"/>
-        <FixedProjectiveConstraint indices="@FixedROI_duodeno.indices" />
-        
-        <TetrahedronFEMForceField name="FEM_duodeno" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_duodeno" computeVonMisesStress="1"/>
+        <!-- BoxROI para el duodeno - caja de 0.2 centrada en (1.0,0,0) -->
+        <BoxROI name="roi_duodeno" box="0.9 -0.1 -0.1 1.1 0.1 0.1" drawBoxes="1" />
+        <FixedProjectiveConstraint indices="0 1 2 3 4 5 6 7 8 9" />
+        <TetrahedronFEMForceField name="FEM_duodeno" youngModulus="100" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_duodeno" computeVonMisesStress="1"/>
         
         <Node name="DuodenoSurface">
             <TriangleSetTopologyContainer name="TriContainer_duodeno" fileTopology="" tags=" " />
@@ -125,22 +122,21 @@
         </Node>
     </Node>
 
-    <!-- ==================== 4. CONDUCTO BILIAR (Z positivo) ==================== -->
+    <!-- ==================== 4. CONDUCTO BILIAR (posición: 0,0,0.5) ==================== -->
     <Node name="ConductoBiliarVolume">
         <EulerImplicitSolver name="cg_odesolver_conducto" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
         <CGLinearSolver iterations="25" name="linear_solver_conducto" tolerance="1.0e-9" threshold="1.0e-9" />
         <MeshGmshLoader name="loader_conducto" filename="CONDUCTOBILIARGMSH.msh" />
-        <MechanicalObject src="@loader_conducto" name="Volume_conducto" scale3d="20 20 20" rotation="140 180 0" translation="0 0 15"/>
+        <MechanicalObject src="@loader_conducto" name="Volume_conducto" scale3d="1 1 1" rotation="0 0 0" translation="0 0 0.5"/>
         <TetrahedronSetTopologyContainer name="TetraContainer_conducto" position="@Volume_conducto.position" src="@loader_conducto" tags=" "/>
         <TetrahedronSetTopologyModifier name="Modifier_conducto" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_conducto" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_conducto"/>
         
-        <!-- BoxROI centrada en 0,0,15 - Tamaño 0.5 -->
-        <BoxROI template="Vec3d" box="-0.5 -0.5 14.5 0.5 0.5 15.5" drawBoxes="1" position="@Volume_conducto.rest_position" name="FixedROI_conducto"/>
-        <FixedProjectiveConstraint indices="@FixedROI_conducto.indices" />
-        
-        <TetrahedronFEMForceField name="FEM_conducto" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_conducto" computeVonMisesStress="1"/>
+        <!-- BoxROI para el conducto biliar - caja de 0.2 centrada en (0,0,0.5) -->
+        <BoxROI name="roi_conducto" box="-0.1 -0.1 0.4 0.1 0.1 0.6" drawBoxes="1" />
+        <FixedProjectiveConstraint indices="0 1 2 3 4 5 6 7 8 9" />
+        <TetrahedronFEMForceField name="FEM_conducto" youngModulus="100" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_conducto" computeVonMisesStress="1"/>
         
         <Node name="ConductoBiliarSurface">
             <TriangleSetTopologyContainer name="TriContainer_conducto" fileTopology="" tags=" " />
@@ -156,22 +152,21 @@
         </Node>
     </Node>
 
-    <!-- ==================== 5. VESÍCULA BILIAR (Z negativo) ==================== -->
+    <!-- ==================== 5. VESÍCULA BILIAR (posición: 0.5,0,0.5) ==================== -->
     <Node name="VesiculaVolume">
         <EulerImplicitSolver name="cg_odesolver_vesicula" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
         <CGLinearSolver iterations="25" name="linear_solver_vesicula" tolerance="1.0e-9" threshold="1.0e-9" />
         <MeshGmshLoader name="loader_vesicula" filename="VESICULAGMSH.msh" />
-        <MechanicalObject src="@loader_vesicula" name="Volume_vesicula" scale3d="20 20 20" rotation="140 180 0" translation="0 0 -15"/>
+        <MechanicalObject src="@loader_vesicula" name="Volume_vesicula" scale3d="1 1 1" rotation="0 0 0" translation="0.5 0 0.5"/>
         <TetrahedronSetTopologyContainer name="TetraContainer_vesicula" position="@Volume_vesicula.position" src="@loader_vesicula" tags=" "/>
         <TetrahedronSetTopologyModifier name="Modifier_vesicula" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_vesicula" template="Vec3d" />
         <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_vesicula"/>
         
-        <!-- BoxROI centrada en 0,0,-15 - Tamaño 0.5 -->
-        <BoxROI template="Vec3d" box="-0.5 -0.5 -15.5 0.5 0.5 -14.5" drawBoxes="1" position="@Volume_vesicula.rest_position" name="FixedROI_vesicula"/>
-        <FixedProjectiveConstraint indices="@FixedROI_vesicula.indices" />
-        
-        <TetrahedronFEMForceField name="FEM_vesicula" youngModulus="600" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_vesicula" computeVonMisesStress="1"/>
+        <!-- BoxROI para la vesícula biliar - caja de 0.2 centrada en (0.5,0,0.5) -->
+        <BoxROI name="roi_vesicula" box="0.4 -0.1 0.4 0.6 0.1 0.6" drawBoxes="1" />
+        <FixedProjectiveConstraint indices="0 1 2 3 4 5 6 7 8 9" />
+        <TetrahedronFEMForceField name="FEM_vesicula" youngModulus="100" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_vesicula" computeVonMisesStress="1"/>
         
         <Node name="VesiculaSurface">
             <TriangleSetTopologyContainer name="TriContainer_vesicula" fileTopology="" tags=" " />

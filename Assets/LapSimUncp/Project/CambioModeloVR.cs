@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -10,39 +11,50 @@ public class CambioModeloVR : MonoBehaviour
     [Header("=== CONFIGURACIÓN ===")]
     public bool esManoIzquierda = true;
 
+    // Creamos una lista para guardar todos los dispositivos de ese brazo (mandos y manos)
+    private List<InputDevice> dispositivos = new List<InputDevice>();
+
     void Update()
     {
         if (modeloMando == null || modeloMano == null) return;
 
-        // Buscamos qué hay conectado exactamente en el puerto izquierdo o derecho en este milisegundo
         XRNode nodo = esManoIzquierda ? XRNode.LeftHand : XRNode.RightHand;
-        InputDevice dispositivo = InputDevices.GetDeviceAtXRNode(nodo);
+        
+        // Llenamos la lista con TODOS los dispositivos conectados a esa mano
+        InputDevices.GetDevicesAtXRNode(nodo, dispositivos);
 
-        // Si hay algo rastreado activamente por las gafas
-        if (dispositivo.isValid)
+        bool hayMandoActivo = false;
+        bool hayManoActiva = false;
+
+        // Revisamos uno por uno qué está activo en este milisegundo
+        foreach (var dispositivo in dispositivos)
         {
-            // Verificamos si ese dispositivo tiene la etiqueta de "Controlador"
-            if ((dispositivo.characteristics & InputDeviceCharacteristics.Controller) != 0)
+            if (dispositivo.isValid)
             {
-                if (!modeloMando.activeSelf) modeloMando.SetActive(true);
-                if (modeloMano.activeSelf) modeloMano.SetActive(false);
-            }
-            // Verificamos si tiene la etiqueta de "Hand Tracking" (Seguimiento de manos)
-            else if ((dispositivo.characteristics & InputDeviceCharacteristics.HandTracking) != 0)
-            {
-                if (modeloMando.activeSelf) modeloMando.SetActive(false);
-                if (!modeloMano.activeSelf) modeloMano.SetActive(true);
-            }
-            else 
-            {
-                // Fallback de seguridad: si Unity se confunde, asumimos que son tus manos
-                if (modeloMando.activeSelf) modeloMando.SetActive(false);
-                if (!modeloMano.activeSelf) modeloMano.SetActive(true);
+                if ((dispositivo.characteristics & InputDeviceCharacteristics.Controller) != 0)
+                {
+                    hayMandoActivo = true;
+                }
+                else if ((dispositivo.characteristics & InputDeviceCharacteristics.HandTracking) != 0)
+                {
+                    hayManoActiva = true;
+                }
             }
         }
-        else
+
+        // Lógica de prioridad: El mando le gana a la mano.
+        if (hayMandoActivo)
         {
-            // Si pierdes el tracking por completo (ej. te quitas las gafas), apagamos todo
+            if (!modeloMando.activeSelf) modeloMando.SetActive(true);
+            if (modeloMano.activeSelf) modeloMano.SetActive(false);
+        }
+        else if (hayManoActiva) // Si no hay mando, pero sí hay mano
+        {
+            if (modeloMando.activeSelf) modeloMando.SetActive(false);
+            if (!modeloMano.activeSelf) modeloMano.SetActive(true);
+        }
+        else // Si soltaste los mandos y escondiste las manos detrás de la espalda
+        {
             if (modeloMando.activeSelf) modeloMando.SetActive(false);
             if (modeloMano.activeSelf) modeloMano.SetActive(false);
         }
