@@ -84,6 +84,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\Root\SofaModelElementExplorer.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\GameUI\InteractiveButton.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\LoadSceneScript.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\SlicedHull.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\WorkInProgress\HandlerController.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\ClipPlaneController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\UI\ScenesManager.cs" />
@@ -113,7 +114,11 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\Root\SofaModelExplorer.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\DAGNode\SofaDAGNode.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\WorkInProgress\SofaViewController.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Framework\Triangulator.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Framework\Line.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Framework\TextureRegion.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\ThirdPersonCamera.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Framework\Plane.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseMeshAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\CuttingTools\CutHole.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\System\PluginManager.cs" />
@@ -134,6 +139,7 @@
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseObjectAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Objects\SofaSphereCollisionObject.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\CorteLaparoscopico.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\ScriptedCamera.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\ToolsAPI\SofaRayCasterAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseComponentAPI.cs" />
@@ -143,6 +149,7 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\CameraController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaFEMForceField.cs" />
     <Compile Include="Assets\LapSimUncp\Project\seguimiento.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Slicer.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\ClipCapsuleController.cs" />
     <Compile Include="Assets\SofaUnity\Scenes\Demos\Endoscopy\BeamAdapter\InitBeamAdapterPlugin.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Base\SofaBaseObject.cs" />
@@ -155,6 +162,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\GameMode\GameController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Data\SofaLink.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Tools\SofaKeyEvent.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\SlicerExtensions.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Objects\SofaSphereCollision.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaComponent.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\ObjectInfo.cs" />
@@ -169,6 +177,8 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\DesactivateCollision.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaLoader.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaVisualModel.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Framework\Intersector.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Framework\Triangle.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Data\SofaLinkArchiver.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaSphere.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaSphereCollisionHand.cs" />
@@ -182,6 +192,7 @@
     <Compile Include="Assets\SofaUnityXR\Scenes\AR\dev_AR_Holes\CutoutObject.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaPlane.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaRigidCylinder.cs" />
+    <Compile Include="Assets\ezy-slice-master\EzySlice\Framework\IntersectionResult.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\CuttingTools\CuttingManager.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Collision\SofaCollisionDisplay.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\SofaCapsuleController.cs" />
@@ -1629,12 +1640,24 @@
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.GPUDriven.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Autodesk.Fbx">
+      <HintPath>Library\ScriptAssemblies\Autodesk.Fbx.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.XR.ARFoundation.InternalUtils">
       <HintPath>Library\ScriptAssemblies\Unity.XR.ARFoundation.InternalUtils.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="PPv2URPConverters">
       <HintPath>Library\ScriptAssemblies\PPv2URPConverters.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.ProBuilder.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.ProBuilder.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.ProBuilder.AddOns.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.ProBuilder.AddOns.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.XR.Hands.Editor">
@@ -1651,6 +1674,10 @@
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Config.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Config.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.ProBuilder.AssetIdRemapUtility">
+      <HintPath>Library\ScriptAssemblies\Unity.ProBuilder.AssetIdRemapUtility.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Editor">
@@ -1693,6 +1720,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.XR.Hands.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Autodesk.Fbx.Editor">
+      <HintPath>Library\ScriptAssemblies\Autodesk.Fbx.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.XR.Management">
       <HintPath>Library\ScriptAssemblies\Unity.XR.Management.dll</HintPath>
       <Private>False</Private>
@@ -1715,6 +1746,10 @@
     </Reference>
     <Reference Include="Unity.XR.MetaOpenXR">
       <HintPath>Library\ScriptAssemblies\Unity.XR.MetaOpenXR.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Settings.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Settings.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Runtime">
@@ -1781,12 +1816,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.XR.MetaOpenXR.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Searcher.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Rider.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Searcher.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.XR.OpenXR.Features.OculusQuestSupport">
@@ -1929,6 +1964,14 @@
       <HintPath>Library\ScriptAssemblies\Unity.XR.ARFoundation.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.ProBuilder">
+      <HintPath>Library\ScriptAssemblies\Unity.ProBuilder.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Formats.Fbx.Runtime">
+      <HintPath>Library\ScriptAssemblies\Unity.Formats.Fbx.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.XR.OpenXR.Features.MetaQuestSupport">
       <HintPath>Library\ScriptAssemblies\Unity.XR.OpenXR.Features.MetaQuestSupport.dll</HintPath>
       <Private>False</Private>
@@ -1939,6 +1982,10 @@
     </Reference>
     <Reference Include="Unity.Burst.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Burst.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Formats.Fbx.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Formats.Fbx.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Burst">

@@ -12,10 +12,17 @@ public class LaparoscopiaLimpia : MonoBehaviour
     [Tooltip("¿Hacia qué eje apunta lo largo de tu tubo? (Normalmente Z o Y)")]
     public Eje ejeDeDeslizamiento = Eje.Z;
 
+    [Header("Configuración de Desconexión")]
+    [Tooltip("Distancia a la que debes sacar el tubo para que se suelte del trocar")]
+    public float distanciaDeDesconexion = 0.8f; // Aumentado para evitar que se desconecte accidentalmente
+
     private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable grab;
     private Rigidbody rb;
     private ConfigurableJoint pivoteQuirurgico;
     private UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor socketApagado;
+    
+    // Candado de seguridad para evitar que 2 sockets peleen por el mismo objeto
+    private bool enProcesoDeAnclaje = false;
 
     void Start()
     {
@@ -28,6 +35,9 @@ public class LaparoscopiaLimpia : MonoBehaviour
 
     private void AlSerAtrapado(SelectEnterEventArgs args)
     {
+        // BUGS SOLUCIONADOS: Si ya estamos en proceso o anclados, ignoramos otros roces de sockets accidentales
+        if (enProcesoDeAnclaje || pivoteQuirurgico != null) return;
+
         if (args.interactorObject is UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor socket)
         {
             StartCoroutine(SecuenciaDeAnclaje(socket));
@@ -36,28 +46,34 @@ public class LaparoscopiaLimpia : MonoBehaviour
 
     private IEnumerator SecuenciaDeAnclaje(UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor socket)
     {
+        enProcesoDeAnclaje = true;
         socketApagado = socket;
-        Rigidbody rbTrocar = socket.GetComponent<Rigidbody>();
+        Rigidbody rbTrocar = socket.GetComponentInParent<Rigidbody>();
 
+        // Apagamos el socket
         socket.socketActive = false;
         
         yield return new WaitForFixedUpdate();
+        Physics.SyncTransforms();
 
-        // ==========================================
-        // SOLUCIÓN AL SALTO DE LA SILUETA AZUL
-        // ==========================================
-        // Identificamos los puntos exactos que Unity usó para la silueta azul
+        // Verificación extra en caso de que el socket haya sido destruido en ese frame
+        if (socket == null)
+        {
+            enProcesoDeAnclaje = false;
+            yield break;
+        }
+
         Transform receptor = socket.attachTransform != null ? socket.attachTransform : socket.transform;
         Transform miAnclaje = grab.attachTransform != null ? grab.attachTransform : transform;
         
-        // 1. Alineamos la rotación
-        transform.rotation = receptor.rotation;
+        // Respetar la rotación del Punto Guía
+        Quaternion diferenciaRotacion = Quaternion.Inverse(miAnclaje.rotation) * transform.rotation;
+        transform.rotation = receptor.rotation * diferenciaRotacion;
         
-        // 2. Lo movemos EXACTAMENTE a la posición de la silueta azul
-        Vector3 diferencia = receptor.position - miAnclaje.position;
-        transform.position += diferencia;
+        // Posición exacta
+        Vector3 diferenciaPos = receptor.position - miAnclaje.position;
+        transform.position += diferenciaPos;
 
-        // 3. Clavamos el pivote en ese mismo lugar
         if (pivoteQuirurgico != null) Destroy(pivoteQuirurgico);
         
         pivoteQuirurgico = gameObject.AddComponent<ConfigurableJoint>();
@@ -71,39 +87,50 @@ public class LaparoscopiaLimpia : MonoBehaviour
         pivoteQuirurgico.projectionDistance = 0.001f;
         pivoteQuirurgico.projectionAngle = 0.001f;
 
-        // 4. MOVIMIENTO
         pivoteQuirurgico.xMotion = ejeDeDeslizamiento == Eje.X ? ConfigurableJointMotion.Free : ConfigurableJointMotion.Locked;
         pivoteQuirurgico.yMotion = ejeDeDeslizamiento == Eje.Y ? ConfigurableJointMotion.Free : ConfigurableJointMotion.Locked;
         pivoteQuirurgico.zMotion = ejeDeDeslizamiento == Eje.Z ? ConfigurableJointMotion.Free : ConfigurableJointMotion.Locked;
 
-        // 5. ROTACIÓN
         pivoteQuirurgico.angularXMotion = ConfigurableJointMotion.Free;
         pivoteQuirurgico.angularYMotion = ConfigurableJointMotion.Free;
         pivoteQuirurgico.angularZMotion = ConfigurableJointMotion.Free;
 
-        // 6. FRICCIÓN
         rb.useGravity = false;
         rb.linearDamping = 5f;
         rb.angularDamping = 5f;
+
+        enProcesoDeAnclaje = false;
     }
 
     void Update()
     {
         if (pivoteQuirurgico != null && socketApagado != null)
         {
+            // Verificamos si la herramienta fue extraída más allá del límite
             float distancia = Vector3.Distance(transform.position, socketApagado.transform.position);
             
-            // Distancia para sacarlo por completo del paciente
-            if (distancia > 0.4f) 
+            if (distancia > distanciaDeDesconexion) 
             {
-                Destroy(pivoteQuirurgico);
-                socketApagado.socketActive = true; 
-                socketApagado = null;
-                
-                rb.useGravity = true;
-                rb.linearDamping = 0f;
-                rb.angularDamping = 0.05f;
+                DesconectarDelTrocar();
             }
         }
+    }
+
+    // Función limpia para asegurar que los Sockets jamás se queden bloqueados
+    private void DesconectarDelTrocar()
+    {
+        if (pivoteQuirurgico != null) Destroy(pivoteQuirurgico);
+        
+        if (socketApagado != null)
+        {
+            socketApagado.socketActive = true; // Reiniciamos el socket de forma segura
+            socketApagado = null;
+        }
+        
+        rb.useGravity = true;
+        rb.linearDamping = 0f;
+        rb.angularDamping = 0.05f;
+        
+        enProcesoDeAnclaje = false;
     }
 }
