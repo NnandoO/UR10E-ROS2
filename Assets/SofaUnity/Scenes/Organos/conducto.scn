@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<Node name="root" dt="0.05" showBoundingTree="0" gravity="0 -9.8 0">
+    <!-- Plugins necesarios -->
+    <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/>
+    <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/>
+    <RequiredPlugin name="Sofa.Component.Collision.Geometry"/>
+    <RequiredPlugin name="Sofa.Component.Collision.Response.Contact"/>
+    <RequiredPlugin name="Sofa.Component.Constraint.Projective"/>
+    <RequiredPlugin name="Sofa.Component.Engine.Select"/>
+    <RequiredPlugin name="Sofa.Component.IO.Mesh"/>
+    <RequiredPlugin name="Sofa.Component.LinearSolver.Iterative"/>
+    <RequiredPlugin name="Sofa.Component.Mapping.Linear"/>
+    <RequiredPlugin name="Sofa.Component.Mass"/>
+    <RequiredPlugin name="Sofa.Component.MechanicalLoad"/>
+    <RequiredPlugin name="Sofa.Component.ODESolver.Backward"/>
+    <RequiredPlugin name="Sofa.Component.SolidMechanics.FEM.Elastic"/>
+    <RequiredPlugin name="Sofa.Component.SolidMechanics.Spring"/>
+    <RequiredPlugin name="Sofa.Component.StateContainer"/>
+    <RequiredPlugin name="Sofa.Component.Topology.Container.Dynamic"/>
+    <RequiredPlugin name="Sofa.Component.Topology.Mapping"/>
+    <RequiredPlugin name="Sofa.Component.Visual"/>
+    <RequiredPlugin name="Sofa.GL.Component.Rendering3D"/>
+    
+    <!-- Plugin de Corte -->
+    <RequiredPlugin name="SofaCarving" pluginName="SofaCarving"/>
+
+    <VisualStyle displayFlags="showVisual" />
+    <DefaultAnimationLoop />
+    <DefaultVisualManagerLoop />
+    
+    <!-- Pipeline de Colisiones (NECESARIO para el corte) -->
+    <CollisionPipeline verbose="0" />
+    <BruteForceBroadPhase/>
+    <BVHNarrowPhase/>
+    <CollisionResponse response="PenalityContactForceField" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.1" contactDistance="0.05" />
+    
+    <!-- Gestor de Corte -->
+    <CarvingManager active="true" carvingDistance="0.001"/>
+
+    <!-- ==================== CONDUCTO BILIAR ==================== -->
+    <Node name="ConductoBiliarVolume">
+        <EulerImplicitSolver name="cg_odesolver_conducto" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
+        <CGLinearSolver iterations="25" name="linear_solver_conducto" tolerance="1.0e-9" threshold="1.0e-9" />
+        
+        <!-- Carga tu archivo conductobiliar2.msh (Versión 2 ASCII) -->
+        <MeshGmshLoader name="loader_conducto" filename="conductobiliar2.msh" />
+        
+        <MechanicalObject src="@loader_conducto" name="Volume_conducto" scale3d="1 1 1" rotation="0 0 0" translation="0 0 0"/>
+        <TetrahedronSetTopologyContainer name="TetraContainer_conducto" position="@Volume_conducto.position" src="@loader_conducto" tags=" "/>
+        <TetrahedronSetTopologyModifier name="Modifier_conducto" />
+        <TetrahedronSetGeometryAlgorithms name="GeomAlgo_conducto" template="Vec3d" />
+        <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_conducto"/>
+        
+        <!-- Fija una zona del conducto para que no caiga (ajusta la caja) -->
+        <BoxROI name="roi_conducto" box="-0.05 -0.05 -0.05 0.05 0.05 0.05" drawBoxes="1" position="@Volume_conducto.rest_position"/>
+        <FixedProjectiveConstraint indices="@roi_conducto.indices" />
+        
+        <TetrahedronFEMForceField name="FEM_conducto" youngModulus="1300" poissonRatio="0.3" computeGlobalMatrix="false" method="large" topology="@TetraContainer_conducto" computeVonMisesStress="1"/>
+        
+        <!-- Superficie con tag CarvingSurface -->
+        <Node name="ConductoBiliarSurface">
+            <TriangleSetTopologyContainer name="TriContainer_conducto" fileTopology="" tags=" " />
+            <TriangleSetTopologyModifier name="Modifier_conducto_surf" />
+            <TriangleSetGeometryAlgorithms name="GeomAlgo_conducto_surf" template="Vec3d" />
+            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_conducto" output="@TriContainer_conducto" />
+            <TriangularBendingSprings name="FEM-Bend_conducto" stiffness="600" damping="1.0" topology="@TriContainer_conducto" />
+            
+            <!-- ⬇️ TAG CRÍTICO PARA EL CORTE -->
+            <TriangleCollisionModel tags="CarvingSurface" />
+            
+            <Node name="ConductoBiliarVisu">
+                <OglModel name="Visual_conducto" color="yellow" />
+                <IdentityMapping input="@../../Volume_conducto" output="@Visual_conducto" />
+            </Node>
+        </Node>
+    </Node>
+</Node>

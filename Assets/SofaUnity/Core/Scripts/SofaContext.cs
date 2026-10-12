@@ -142,13 +142,13 @@ namespace SofaUnity
 
         /// Getter/Setter asynchronous simulation
         public bool AsyncSimulation
-        {
-            get { return m_asyncSimulation; }
-            set {
-                if (!Application.isPlaying)
-                    m_asyncSimulation = value;
-            }
-        }
+{
+    get { return m_asyncSimulation; }
+    set {
+        if (!Application.isPlaying)
+            m_asyncSimulation = value;
+    }
+}
 
         /// Setter to unload the current scene and clear the sofa context. Will call @sa ClearSofaScene.
         public bool UnLoadScene

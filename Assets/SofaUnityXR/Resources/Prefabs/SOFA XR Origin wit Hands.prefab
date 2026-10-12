@@ -26528,8 +26528,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   manoIzquierdaXR: {fileID: 0}
   manoDerechaXR: {fileID: 0}
-  m_leftGripButton: {fileID: -6131295136447488360, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  m_rightGripButton: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  m_leftTriggerButton: {fileID: 0}
+  m_rightTriggerButton: {fileID: 0}
   m_leftSofaLaserModel: {fileID: 926613267261959436}
   m_rightSofaLaserModel: {fileID: 926613266698551020}
 --- !u!1 &1804012243495081359
