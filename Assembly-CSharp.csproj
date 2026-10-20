@@ -109,12 +109,15 @@
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\ComponentsAPI\SofaVisualModelAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Data\SofaData.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaBox.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\GestorEspejoHerramientas.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\GenerateZIP.cs" />
     <Compile Include="Assets\LapSimUncp\Project\FusionarColisionador.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\GameUI\InteractiveMenuPanel.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaMass.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\IntercambioHerramienta.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\ComponentsAPI\SofaMeshAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaGrid.cs" />
+    <Compile Include="Assets\seguimientoL.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Objects\SofaMeshObject.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\Root\SofaModelExplorer.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\DAGNode\SofaDAGNode.cs" />
@@ -132,6 +135,7 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Benchmarks.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Tools\SofaLaserModel.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaGrab_Pinza.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\ControladorInstrumentoSoafa.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\TriggerLaser.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\ObjectController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Topology\TopologyElements.cs" />
@@ -145,6 +149,7 @@
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Objects\SofaSphereCollisionObject.cs" />
     <Compile Include="Assets\LapSimUncp\Project\CorteLaparoscopico.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\UnificadorDeMallas.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\ScriptedCamera.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\ToolsAPI\SofaRayCasterAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseComponentAPI.cs" />
@@ -222,6 +227,7 @@
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\GraphicAPI\SofaGraphicAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Components\SofaBeamModel.cs" />
     <Compile Include="Assets\LapSimUncp\Project\PinzaRetraccionSinFisicas.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\ControladorVisorLaparoscopio.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Tools\SofaRayCaster.cs" />
   </ItemGroup>
   <ItemGroup>

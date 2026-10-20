@@ -58,6 +58,10 @@ public class seguimiento : MonoBehaviour
 
     private bool isCalibrated = false;
     private bool zLiberado = false;
+    
+    // 🔒 NUEVA BANDERA: Controla si el robot ya comenzó a seguir la mano
+    private bool seguimientoActivadoPorEspacio = false;
+
     private float[] targetJoints = new float[6];
     private bool hasNewData = false;
     private bool hasReceivedSync = false;
@@ -145,19 +149,13 @@ public class seguimiento : MonoBehaviour
         return false;
     }
 
-    /// <summary>
-    /// Detecta el thumbstick press (agarrar el joystick del mando derecho)
-    /// como botón de recalibrar.
-    /// </summary>
     bool BotonRecalibrarPresionado()
     {
         bool presionadoAhora = false;
 
-        // Tecla R (editor)
         if (Input.GetKey(teclaRecalibrar))
             presionadoAhora = true;
 
-        // Thumbstick press del mando derecho
         RefrescarDevices();
         if (rightDevice.isValid)
         {
@@ -175,13 +173,22 @@ public class seguimiento : MonoBehaviour
     {
         if (hasNewData) ApplyJointsToMotors();
 
-        if (Input.GetKeyDown(KeyCode.Space) && isCalibrated && !zLiberado)
+        // ⌨️ ACTIVAR SEGUIMIENTO CON LA BARRA ESPACIADORA
+        if (Input.GetKeyDown(KeyCode.Space) && isCalibrated)
         {
-            zLiberado = true;
-            Debug.Log("🔓 [Robot] ESPACIO PRESIONADO. Profundidad (Z) liberada.");
+            if (!seguimientoActivadoPorEspacio)
+            {
+                seguimientoActivadoPorEspacio = true;
+                zLiberado = true; // Libera la profundidad al activar
+                Debug.Log("🚀 [Robot] ¡SEGUIMIENTO ACTIVADO! Sincronizado con la mano.");
+            }
+            else if (!zLiberado)
+            {
+                zLiberado = true;
+                Debug.Log("🔓 [Robot] Profundidad (Z) liberada.");
+            }
         }
 
-        // === 🔄 RECALIBRACIÓN ===
         if (BotonRecalibrarPresionado())
         {
             initialHandRotation = handReference.rotation;
@@ -190,7 +197,6 @@ public class seguimiento : MonoBehaviour
             Debug.Log($"🔄 RECALIBRADO. Rotación: {initialHandRotation.eulerAngles}");
         }
 
-        // Botones A/B -> J6
         float wrist3Input = 0f;
         RefrescarDevices();
         if (rightDevice.isValid)
@@ -212,8 +218,10 @@ public class seguimiento : MonoBehaviour
 
     void LateUpdate()
     {
+        // 🛑 BLOQUEO: Si no está conectado, no está calibrado, o NO se ha presionado espacio, NO envía comandos de la mano
         if (client == null || !client.Connected || !hasReceivedSync) return;
-        if (!isCalibrated || handReference == null || baseDelRobot == null) return;
+        if (!isCalibrated || !seguimientoActivadoPorEspacio || handReference == null || baseDelRobot == null) return;
+        
         if (Time.time - lastSendTime < sendInterval) return;
 
         if (AlgunJoystickActivo()) return;
@@ -229,7 +237,7 @@ public class seguimiento : MonoBehaviour
         {
             initialHandRotation = handReference.rotation;
             handRotationCaptured = true;
-            Debug.Log("✅ Captura inicial automática.");
+            Debug.Log("✅ Captura inicial de rotación automática.");
         }
 
         Quaternion deltaRot = Quaternion.Inverse(initialHandRotation) * handReference.rotation;
@@ -287,7 +295,7 @@ public class seguimiento : MonoBehaviour
             SendSyncAck();
             syncAckSent = true;
             isCalibrated = true;
-            Debug.Log("✅ Calibrado.");
+            Debug.Log("✅ Calibrado y posicionado en la pose inicial. Presiona ESPACIO para iniciar el seguimiento.");
         }
     }
 

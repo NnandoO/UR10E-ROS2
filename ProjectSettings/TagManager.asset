@@ -12,6 +12,8 @@ TagManager:
   - LeftHandModel
   - References
   - Trocar
+  - Laparoscopico
+  - AbdomenPaciente
   layers:
   - Default
   - TransparentFX
@@ -20,7 +22,7 @@ TagManager:
   - Water
   - UI
   - Corte_Organo
-  - 
+  - Trocar
   - 
   - 
   - 
