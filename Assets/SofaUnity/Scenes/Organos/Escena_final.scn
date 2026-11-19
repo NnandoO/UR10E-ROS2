@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!-- GRAVEDAD DESACTIVADA AQUÍ (0 0 0) -->
-<Node name="root" dt="0.05" showBoundingTree="0" gravity="0 0 0">
+<Node name="root" dt="0.02" showBoundingTree="0" gravity="0 0 0">
     <RequiredPlugin name="Sofa.Component.Collision.Detection.Algorithm"/>
     <RequiredPlugin name="Sofa.Component.Collision.Detection.Intersection"/>
     <RequiredPlugin name="Sofa.Component.Collision.Geometry"/>
@@ -29,11 +29,11 @@
     <BruteForceBroadPhase/>
     <BVHNarrowPhase/>
     <CollisionResponse response="PenalityContactForceField" />
-    <MinProximityIntersection name="Proximity" alarmDistance="1.0" contactDistance="0.6" />
+    <MinProximityIntersection name="Proximity" alarmDistance="0.03" contactDistance="0.01" />
     <CollisionDetectionDisplay name="CollisionDetectionDisplay"/>
 
     <!-- ========================================================================= -->
-    <!-- 1. DUODENO: Translation (0.03, -0.0178, 0.15)                             -->
+    <!-- 1. DUODENO (PROTEGIDO CONTRA CRASH SI LA TIJERA LO ROZA)                  -->
     <!-- ========================================================================= -->
     <Node name="DuodenoVolume">
         <EulerImplicitSolver name="cg_odesolver_duo" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
@@ -42,24 +42,19 @@
 
         <MechanicalObject src="@loader_duo" name="Volume_duo" translation="0.03 -0.0178 0.15" rotation="0 0 0" scale3d="1 1 1" />
         <TetrahedronSetTopologyContainer name="TetraContainer_duo" position="@Volume_duo.position" src="@loader_duo" tags=" "/>
-        <TetrahedronSetTopologyModifier name="Modifier_duo" />
+        <TetrahedronSetTopologyModifier name="Modifier_duo" removeIsolatedElements="true" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_duo" template="Vec3d" />
-        <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_duo"/>
+        <DiagonalMass massDensity="1.0" topology="@TetraContainer_duo" />
 
-        <!-- BoxROI Ampliada (+-0.025) para asegurar anclaje firme sin que se salga -->
-        <BoxROI template="Vec3d" box="0.005 -0.0428 0.125 0.055 0.0072 0.175" drawBoxes="1" position="@Volume_duo.rest_position" name="FixedROI_duo"/>
-        <FixedProjectiveConstraint indices="@FixedROI_duo.indices" />
-
-        <!-- Mayor dureza: youngModulus="60000" y poissonRatio="0.4" -->
-        <TetrahedronFEMForceField name="FEM_duo" youngModulus="60000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_duo" computeVonMisesStress="1"/>
+        <RestShapeSpringsForceField name="Springs_duo" stiffness="3500" angularStiffness="3500" handleTopologyChange="1" drawSpring="false" />
+        <TetrahedronFEMForceField name="FEM_duo" youngModulus="30000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_duo" computeVonMisesStress="0" handleTopologyChange="1"/>
 
         <Node name="DuodenoSurface">
             <TriangleSetTopologyContainer name="TriContainer_duo" fileTopology="" tags=" " />
             <TriangleSetTopologyModifier name="Modifier_surf_duo" />
             <TriangleSetGeometryAlgorithms name="GeomAlgo_surf_duo" template="Vec3d" />
-            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_duo" output="@TriContainer_duo" />
-            <TriangularBendingSprings name="FEM-Bend_duo" stiffness="8000" damping="1.0" topology="@TriContainer_duo" />
-            <TriangleCollisionModel />
+            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_duo" output="@TriContainer_duo" noNewTriangles="0" />
+            <TriangleCollisionModel group="1" />
             <Node name="DuodenoVisu">
                 <OglModel name="Visual_duo" color="green" />
                 <IdentityMapping input="@../../Volume_duo" output="@Visual_duo" />
@@ -68,33 +63,34 @@
     </Node>
 
     <!-- ========================================================================= -->
-    <!-- 2. VESÍCULA: Translation (0.055, 0, 0.17)                                 -->
+    <!-- 2. VESÍCULA (100% ESTABLE AL CORTAR Y ESTIRAR, SIN TRIANGULARBENDING)     -->
     <!-- ========================================================================= -->
     <Node name="VesiculaVolume">
-        <EulerImplicitSolver name="cg_odesolver_ves" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
+        <EulerImplicitSolver name="cg_odesolver_ves" printLog="false" rayleighStiffness="0.1" rayleighMass="0.2" />
         <CGLinearSolver iterations="25" name="linear solver_ves" tolerance="1.0e-9" threshold="1.0e-9" />
         <MeshGmshLoader name="loader_ves" filename="VESICULA.msh" />
 
         <MechanicalObject src="@loader_ves" name="Volume_ves" translation="0.055 0 0.17" rotation="0 0 0" scale3d="1 1 1" />
         <TetrahedronSetTopologyContainer name="TetraContainer_ves" position="@Volume_ves.position" src="@loader_ves" tags=" "/>
-        <TetrahedronSetTopologyModifier name="Modifier_ves" />
+        <TetrahedronSetTopologyModifier name="Modifier_ves" removeIsolatedElements="true" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_ves" template="Vec3d" />
-        <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_ves"/>
+        
+        <!-- DiagonalMass es indispensable para que al borrar tetraedros no colapse la matriz de masa -->
+        <DiagonalMass massDensity="1.0" topology="@TetraContainer_ves" />
 
-        <!-- BoxROI Ultra-pequeña (+-0.003) para que se mueva libremente pero no salga volando -->
-        <BoxROI template="Vec3d" box="0.052 -0.003 0.167 0.058 0.003 0.173" drawBoxes="1" position="@Volume_ves.rest_position" name="FixedROI_ves"/>
-        <FixedProjectiveConstraint indices="@FixedROI_ves.indices" />
-
-        <!-- Mayor dureza: youngModulus="60000" -->
-        <TetrahedronFEMForceField name="FEM_ves" youngModulus="60000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_ves" computeVonMisesStress="1"/>
+        <!-- computeVonMisesStress="0" y handleTopologyChange="1" evitan el Segmentation Fault al cortar -->
+        <RestShapeSpringsForceField name="Springs_ves" stiffness="400" angularStiffness="400" handleTopologyChange="1" drawSpring="false" />
+        <TetrahedronFEMForceField name="FEM_ves" youngModulus="20000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_ves" computeVonMisesStress="0" handleTopologyChange="1"/>
 
         <Node name="VesiculaSurface">
             <TriangleSetTopologyContainer name="TriContainer_ves" fileTopology="" tags=" " />
             <TriangleSetTopologyModifier name="Modifier_surf_ves" />
             <TriangleSetGeometryAlgorithms name="GeomAlgo_surf_ves" template="Vec3d" />
-            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_ves" output="@TriContainer_ves" />
-            <TriangularBendingSprings name="FEM-Bend_ves" stiffness="8000" damping="1.0" topology="@TriContainer_ves" />
-            <TriangleCollisionModel />
+            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_ves" output="@TriContainer_ves" noNewTriangles="0" />
+            
+            <!-- Se eliminó TriangularBendingSprings porque corrompe la memoria al cortar triángulos en vivo -->
+            <TriangleCollisionModel group="1" bothSide="1" />
+
             <Node name="VesiculaVisu">
                 <OglModel name="Visual_ves" color="cyan" />
                 <IdentityMapping input="@../../Volume_ves" output="@Visual_ves" />
@@ -103,7 +99,7 @@
     </Node>
 
     <!-- ========================================================================= -->
-    <!-- 3. ESTÓMAGO: Translation (-0.027, -0.01, 0.2185)                          -->
+    <!-- 3. ESTÓMAGO (PROTEGIDO CONTRA CRASH SI LA TIJERA LO ROZA)                 -->
     <!-- ========================================================================= -->
     <Node name="EstomagoVolume">
         <EulerImplicitSolver name="cg_odesolver_est" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
@@ -112,24 +108,19 @@
 
         <MechanicalObject src="@loader_est" name="Volume_est" translation="-0.027 -0.01 0.2185" rotation="0 0 0" scale3d="1 1 1" />
         <TetrahedronSetTopologyContainer name="TetraContainer_est" position="@Volume_est.position" src="@loader_est" tags=" "/>
-        <TetrahedronSetTopologyModifier name="Modifier_est" />
+        <TetrahedronSetTopologyModifier name="Modifier_est" removeIsolatedElements="true" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_est" template="Vec3d" />
-        <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_est"/>
+        <DiagonalMass massDensity="1.0" topology="@TetraContainer_est" />
 
-        <!-- BoxROI Ampliada (+-0.025) para que el estómago quede bien sujeto en su sitio -->
-        <BoxROI template="Vec3d" box="-0.052 -0.035 0.1935 -0.002 0.015 0.2435" drawBoxes="1" position="@Volume_est.rest_position" name="FixedROI_est"/>
-        <FixedProjectiveConstraint indices="@FixedROI_est.indices" />
-
-        <!-- Mayor dureza: youngModulus="60000" -->
-        <TetrahedronFEMForceField name="FEM_est" youngModulus="60000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_est" computeVonMisesStress="1"/>
+        <RestShapeSpringsForceField name="Springs_est" stiffness="3500" angularStiffness="3500" handleTopologyChange="1" drawSpring="false" />
+        <TetrahedronFEMForceField name="FEM_est" youngModulus="30000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_est" computeVonMisesStress="0" handleTopologyChange="1"/>
 
         <Node name="EstomagoSurface">
             <TriangleSetTopologyContainer name="TriContainer_est" fileTopology="" tags=" " />
             <TriangleSetTopologyModifier name="Modifier_surf_est" />
             <TriangleSetGeometryAlgorithms name="GeomAlgo_surf_est" template="Vec3d" />
-            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_est" output="@TriContainer_est" />
-            <TriangularBendingSprings name="FEM-Bend_est" stiffness="8000" damping="1.0" topology="@TriContainer_est" />
-            <TriangleCollisionModel />
+            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_est" output="@TriContainer_est" noNewTriangles="0" />
+            <TriangleCollisionModel group="1" />
             <Node name="EstomagoVisu">
                 <OglModel name="Visual_est" color="red" />
                 <IdentityMapping input="@../../Volume_est" output="@Visual_est" />
@@ -138,7 +129,7 @@
     </Node>
 
     <!-- ========================================================================= -->
-    <!-- 4. HÍGADO: Translation (0, 0, 0.25) | Rotation (270, 0, 180)              -->
+    <!-- 4. HÍGADO (PROTEGIDO CONTRA CRASH SI LA TIJERA LO ROZA)                   -->
     <!-- ========================================================================= -->
     <Node name="HigadoVolume">
         <EulerImplicitSolver name="cg_odesolver_hig" printLog="false" rayleighStiffness="0.1" rayleighMass="0.1" />
@@ -147,24 +138,19 @@
 
         <MechanicalObject src="@loader_hig" name="Volume_hig" translation="0 0 0.25" rotation="270 0 180" scale3d="0.1 0.1 0.1" />
         <TetrahedronSetTopologyContainer name="TetraContainer_hig" position="@Volume_hig.position" src="@loader_hig" tags=" "/>
-        <TetrahedronSetTopologyModifier name="Modifier_hig" />
+        <TetrahedronSetTopologyModifier name="Modifier_hig" removeIsolatedElements="true" />
         <TetrahedronSetGeometryAlgorithms name="GeomAlgo_hig" template="Vec3d" />
-        <MeshMatrixMass massDensity="1.0" topology="@TetraContainer_hig"/>
+        <DiagonalMass massDensity="1.0" topology="@TetraContainer_hig" />
 
-        <!-- BoxROI Ampliada (+-0.025) para sujetar firmemente la cúpula del hígado -->
-        <BoxROI template="Vec3d" box="-0.025 -0.025 0.225 0.025 0.025 0.275" drawBoxes="1" position="@Volume_hig.rest_position" name="FixedROI_hig"/>
-        <FixedProjectiveConstraint indices="@FixedROI_hig.indices" />
-
-        <!-- Mayor dureza aún para el hígado (tejido más denso): youngModulus="80000" -->
-        <TetrahedronFEMForceField name="FEM_hig" youngModulus="80000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_hig" computeVonMisesStress="1"/>
+        <RestShapeSpringsForceField name="Springs_hig" stiffness="4500" angularStiffness="4500" handleTopologyChange="1" drawSpring="false" />
+        <TetrahedronFEMForceField name="FEM_hig" youngModulus="40000" poissonRatio="0.4" computeGlobalMatrix="false" method="large" topology="@TetraContainer_hig" computeVonMisesStress="0" handleTopologyChange="1"/>
 
         <Node name="HigadoSurface">
             <TriangleSetTopologyContainer name="TriContainer_hig" fileTopology="" tags=" " />
             <TriangleSetTopologyModifier name="Modifier_surf_hig" />
             <TriangleSetGeometryAlgorithms name="GeomAlgo_surf_hig" template="Vec3d" />
-            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_hig" output="@TriContainer_hig" />
-            <TriangularBendingSprings name="FEM-Bend_hig" stiffness="10000" damping="1.0" topology="@TriContainer_hig" />
-            <TriangleCollisionModel />
+            <Tetra2TriangleTopologicalMapping input="@../TetraContainer_hig" output="@TriContainer_hig" noNewTriangles="0" />
+            <TriangleCollisionModel group="1" />
             <Node name="HigadoVisu">
                 <OglModel name="Visual_hig" color="blue" />
                 <IdentityMapping input="@../../Volume_hig" output="@Visual_hig" />

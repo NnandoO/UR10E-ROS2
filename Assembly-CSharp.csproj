@@ -68,6 +68,7 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\CuttingTools\BurningManager.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\tableController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Tools\SurfacePressureManager.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Demo\EstructuraTubular.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\BaseVRController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaComponentFactory.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\UI\DataManager\SDataSaveLoad.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaTwoHandedGrabMoveProvider.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Objects\SofaObjectHierarchy.cs" />
     <Compile Include="Assets\LapSimUncp\Project\ClipadoraLaparoscopica.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Escena\LuzLaparoscopio.cs" />
     <Compile Include="Assets\SofaUnity\Tests\api\ScenesTestRunner.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\randomPosition.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\CuttingTools\LaserRay.cs" />
@@ -87,6 +89,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\Root\SofaModelElementExplorer.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\GameUI\InteractiveButton.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\LoadSceneScript.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Demo\CinematicaBrazoUR.cs" />
     <Compile Include="Assets\ezy-slice-master\EzySlice\SlicedHull.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\WorkInProgress\HandlerController.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\ClipPlaneController.cs" />
@@ -109,7 +112,6 @@
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\ComponentsAPI\SofaVisualModelAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Data\SofaData.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaBox.cs" />
-    <Compile Include="Assets\LapSimUncp\Project\Scripts\GestorEspejoHerramientas.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\GenerateZIP.cs" />
     <Compile Include="Assets\LapSimUncp\Project\FusionarColisionador.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\GameUI\InteractiveMenuPanel.cs" />
@@ -130,13 +132,15 @@
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseMeshAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\CuttingTools\CutHole.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\System\PluginManager.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Escena\VistaAbdominal.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaAnimationLoop.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\UI\XRDebugConsole\XR_FPSCounter.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Benchmarks.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Tools\SofaLaserModel.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\SeguimientoBrazoBase.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaGrab_Pinza.cs" />
-    <Compile Include="Assets\LapSimUncp\Project\Scripts\ControladorInstrumentoSoafa.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\TriggerLaser.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\DuplicadorInstrumentoRobot.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\ObjectController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Topology\TopologyElements.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaRigidBox.cs" />
@@ -150,15 +154,18 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Objects\SofaSphereCollisionObject.cs" />
     <Compile Include="Assets\LapSimUncp\Project\CorteLaparoscopico.cs" />
     <Compile Include="Assets\LapSimUncp\Project\Scripts\UnificadorDeMallas.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\ControladorFulcroLaparoscopio.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\ScriptedCamera.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\ToolsAPI\SofaRayCasterAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\BaseAPI\SofaBaseComponentAPI.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\GraphicAPI\AbstractSofaGraphicCall.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Demo\InstrumentalOpenRST.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\SofaCustomMeshAPI.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\CameraController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaFEMForceField.cs" />
     <Compile Include="Assets\LapSimUncp\Project\seguimiento.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Scripts\SofaInstrumentoQuirurgico.cs" />
     <Compile Include="Assets\ezy-slice-master\EzySlice\Slicer.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\ClipCapsuleController.cs" />
     <Compile Include="Assets\SofaUnity\Scenes\Demos\Endoscopy\BeamAdapter\InitBeamAdapterPlugin.cs" />
@@ -217,9 +224,12 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Base\SofaBase.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\CuttingTools\DrawLaser.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\KeyActionsRecorder.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Demo\GestorModosSimulador.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Objects\SofaCollisionPipeline.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Objects\SofaVisualMesh.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Demo\DemoAutomaticaColecistectomia.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Topology\SofaMeshTopology.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Escena\PreparacionQuirurgica.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\MouseCameraController.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\DAGNode\SofaDAGNodeManager.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\CuttingTools\MouseCutter.cs" />
@@ -228,6 +238,7 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Components\SofaBeamModel.cs" />
     <Compile Include="Assets\LapSimUncp\Project\PinzaRetraccionSinFisicas.cs" />
     <Compile Include="Assets\LapSimUncp\Project\Scripts\ControladorVisorLaparoscopio.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Demo\DemoColecistectomia.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Tools\SofaRayCaster.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -1091,6 +1102,10 @@
       <HintPath>Library\PackageCache\com.unity.visualscripting@8bed5ad90189\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0\Runtime\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff\Mono.Cecil.dll</HintPath>
       <Private>False</Private>
@@ -1919,6 +1934,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.XR.ARFoundation.VisualScripting.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="MCPForUnity.Runtime">
+      <HintPath>Library\ScriptAssemblies\MCPForUnity.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.XR.LegacyInputHelpers">
       <HintPath>Library\ScriptAssemblies\UnityEngine.XR.LegacyInputHelpers.dll</HintPath>
       <Private>False</Private>
@@ -1937,6 +1956,10 @@
     </Reference>
     <Reference Include="Unity.XR.OpenXR.Features.MetaQuestSupport.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.XR.OpenXR.Features.MetaQuestSupport.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MCPForUnity.Editor">
+      <HintPath>Library\ScriptAssemblies\MCPForUnity.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Flow.Editor">
