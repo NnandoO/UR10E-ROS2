@@ -18,13 +18,26 @@ public class InstrumentalOpenRST
 {
     public enum Mordaza { Original, Fenestrada, Maryland, PortaAgujas }
 
-    public Transform punta;            // interface_link (el que usa IntercambioHerramienta)
-    public Transform eeLink;           // extremo del instrumento (entre los dedos)
+    public Transform punta;            // interface_link: el tubo rígido del instrumento (corre por su +Y local)
+    public Transform eeLink;           // ee_link del URDF (cuelga de un dedo: NO es rígido respecto al tubo)
     public Transform dedoIzq, dedoDer; // finger_left_link / finger_right_link
+    private Transform pitch;
     private MeshFilter visIzq, visDer;
     private Mesh mallaIzqOriginal, mallaDerOriginal;
-    private Quaternion rotIzqOriginal, rotDerOriginal;
-    private float aperturaActual;
+    private float largo;               // del origen del tubo al centro de la mordaza, sobre el eje del tubo
+
+    // La muñeca (pitch) y los dedos son articulaciones físicas que el importador URDF deja sin rigidez:
+    // sin motor cuelgan sueltas. Mientras la demo usa el instrumento se sujetan con sus drives.
+    private ArticulationBody abPitch, abIzq, abDer;
+    private ArticulationDrive drivePitch0, driveIzq0, driveDer0;
+    private bool drivesGuardados;
+    private float signoIzq = 1f, signoDer = -1f;
+
+    /// <summary>Eje del tubo, de la base hacia la mordaza.</summary>
+    public Vector3 Eje => punta.up;
+    /// <summary>Centro de la mordaza, sobre el eje del tubo (rígido respecto al brazo).</summary>
+    public Vector3 Extremo => punta.position + punta.up * largo;
+    public float Largo => largo;
 
     private static readonly Dictionary<string, Mesh> cacheStl = new Dictionary<string, Mesh>();
 
@@ -47,8 +60,18 @@ public class InstrumentalOpenRST
         }
         o.mallaIzqOriginal = o.visIzq.sharedMesh;
         o.mallaDerOriginal = o.visDer.sharedMesh;
-        o.rotIzqOriginal = o.dedoIzq.localRotation;
-        o.rotDerOriginal = o.dedoDer.localRotation;
+        o.pitch = o.dedoIzq.parent;
+        o.abPitch = o.pitch.GetComponent<ArticulationBody>();
+        o.abIzq = o.dedoIzq.GetComponent<ArticulationBody>();
+        o.abDer = o.dedoDer.GetComponent<ArticulationBody>();
+        // Largo nominal: tubo hasta la muñeca + dedo + ee_link, todo en línea con la muñeca recta
+        o.largo = Vector3.Dot(o.pitch.position - puntaBrazo.position, puntaBrazo.up)
+                  + o.dedoIzq.localPosition.magnitude + o.eeLink.localPosition.magnitude;
+        // Los marcos de los dos dedos están espejados: se deduce el signo que ABRE cada uno
+        Vector3 ejeIzq = o.abIzq != null ? o.dedoIzq.rotation * o.abIzq.anchorRotation * Vector3.right : Vector3.zero;
+        Vector3 ejeDer = o.abDer != null ? o.dedoDer.rotation * o.abDer.anchorRotation * Vector3.right : Vector3.zero;
+        o.signoIzq = 1f;
+        o.signoDer = Vector3.Dot(ejeIzq, ejeDer) > 0f ? -1f : 1f;
         return o;
     }
 
@@ -75,20 +98,47 @@ public class InstrumentalOpenRST
         visDer.sharedMesh = b != null ? b : mallaDerOriginal;
     }
 
-    /// <summary>Apertura de la pinza en grados (0 = cerrada). Gira cada dedo sobre su eje de bisagra.</summary>
+    static void Sujetar(ArticulationBody ab, float objetivoGrados)
+    {
+        if (ab == null || ab.jointPosition.dofCount == 0) return;
+        var d = ab.xDrive;
+        d.stiffness = 4000f; d.damping = 80f; d.forceLimit = float.MaxValue;
+        d.target = objetivoGrados;
+        ab.xDrive = d;
+    }
+
+    /// <summary>
+    /// Apertura de la pinza en grados por dedo (0 = cerrada). También mantiene la muñeca recta, alineada
+    /// con el tubo. Actúa sobre los motores de las articulaciones, no sobre los transforms.
+    /// </summary>
     public void Apertura(float grados)
     {
-        aperturaActual = grados;
-        dedoIzq.localRotation = rotIzqOriginal * Quaternion.AngleAxis(+grados, Vector3.forward);
-        dedoDer.localRotation = rotDerOriginal * Quaternion.AngleAxis(-grados, Vector3.forward);
+        if (!drivesGuardados)
+        {
+            if (abPitch != null) drivePitch0 = abPitch.xDrive;
+            if (abIzq != null) driveIzq0 = abIzq.xDrive;
+            if (abDer != null) driveDer0 = abDer.xDrive;
+            drivesGuardados = true;
+        }
+        Sujetar(abPitch, 0f);
+        Sujetar(abIzq, signoIzq * grados);
+        Sujetar(abDer, signoDer * grados);
     }
+
+    /// <summary>Ángulo real entre las dos mordazas (grados), para comprobar la apertura.</summary>
+    public float AperturaReal => Vector3.Angle(dedoIzq.right, dedoDer.right);
 
     public void Restaurar()
     {
         if (visIzq != null) visIzq.sharedMesh = mallaIzqOriginal;
         if (visDer != null) visDer.sharedMesh = mallaDerOriginal;
-        if (dedoIzq != null) dedoIzq.localRotation = rotIzqOriginal;
-        if (dedoDer != null) dedoDer.localRotation = rotDerOriginal;
+        if (drivesGuardados)
+        {
+            if (abPitch != null) abPitch.xDrive = drivePitch0;
+            if (abIzq != null) abIzq.xDrive = driveIzq0;
+            if (abDer != null) abDer.xDrive = driveDer0;
+            drivesGuardados = false;
+        }
     }
 
     /// <summary>Solo para diagnóstico desde el editor.</summary>

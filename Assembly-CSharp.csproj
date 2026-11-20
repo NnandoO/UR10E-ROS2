@@ -88,6 +88,7 @@
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\SofaDefines.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\Root\SofaModelElementExplorer.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\GameUI\InteractiveButton.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Escena\TrocarQuirurgico.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Utils\LoadSceneScript.cs" />
     <Compile Include="Assets\LapSimUncp\Project\Demo\CinematicaBrazoUR.cs" />
     <Compile Include="Assets\ezy-slice-master\EzySlice\SlicedHull.cs" />

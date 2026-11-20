@@ -115,8 +115,9 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         public Rigidbody rb;
         public Collider[] solidos;
         public Vector3 posDock; public Quaternion rotDock;   // pose exacta que da el socket
-        public Vector3 fulcroLocal, cabezalLocal;            // sobre el eje funcional del trocar
-        public float xPuntaLocal;                            // extremo de la cánula (lado del paciente)
+        public Vector3 fulcroLocal, ejeLocal;                // centro del fulcro y eje del tubo (hacia el cabezal)
+        public Vector3 cabezalLocal, puntaLocal;             // extremos del trocar sobre ese eje (mango del obturador y punzón)
+        public TrocarQuirurgico tq;
         public bool estabaColocado, kin;
         public Brazo portador;                               // brazo que lo lleva en la pinza (o null)
     }
@@ -408,10 +409,18 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
     Brazo CrearBrazo(SeguimientoBrazoBase seg, bool esIzq)
     {
         seg.PausadoPorDemo = true;
-        var ik = new CinematicaBrazoUR(seg.urJoints, intercambio.PosicionPivote(esIzq), intercambio.RotacionPivote(esIzq));
-        ik.LeerAngulosActuales();
-        var b = new Brazo { izq = esIzq, seg = seg, ik = ik, qInicio = (float[])ik.q.Clone() };
+        var b = new Brazo { izq = esIzq, seg = seg };
         if (usarInstrumentalOpenRST) b.openRST = InstrumentalOpenRST.Buscar(intercambio.PuntaBrazo(esIzq));
+        var ik = new CinematicaBrazoUR(seg.urJoints, Pivote(b), RotPivote(b));
+        ik.LeerAngulosActuales();
+        b.ik = ik; b.qInicio = (float[])ik.q.Clone();
+        if (b.openRST != null)
+        {
+            // La IK controla el TUBO rígido del OpenRST: su base y su eje. (La muñeca y los dedos son
+            // articulaciones aparte; se sujetan rectas con sus motores.)
+            ik.FijarEjeHacia(Pivote(b) + b.openRST.Eje, Pivote(b), RotPivote(b));
+            b.openRST.Apertura(0f);
+        }
         var m = ik.FKPivote(ik.q);
         b.objetivo = CinematicaBrazoUR.Pos(m);
         b.eje = ik.Eje(m);
@@ -488,8 +497,12 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
     static Vector3 EnDock(PuertoDemo pd, Vector3 local) =>
         pd.posDock + pd.rotDock * Vector3.Scale(local, pd.trocar.lossyScale);
 
-    Vector3 ExtremoBrazo(Brazo b) => b.openRST != null ? b.openRST.eeLink.position : intercambio.PosicionPivote(b.izq);
-    float LargoHerramienta(Brazo b) => Vector3.Distance(intercambio.PosicionPivote(b.izq), ExtremoBrazo(b));
+    // Con OpenRST todo se refiere al tubo rígido (interface_link); sin él, al pivote del intercambio.
+    Vector3 Pivote(Brazo b) => b.openRST != null ? b.openRST.punta.position : intercambio.PosicionPivote(b.izq);
+    Quaternion RotPivote(Brazo b) => b.openRST != null ? b.openRST.punta.rotation : intercambio.RotacionPivote(b.izq);
+    Vector3 EjeBrazo(Brazo b) => b.openRST != null ? b.openRST.Eje : (intercambio.RotacionPivote(b.izq) * b.ik.ejeHerramientaLocal).normalized;
+    Vector3 ExtremoBrazo(Brazo b) => b.openRST != null ? b.openRST.Extremo : intercambio.PosicionPivote(b.izq);
+    float LargoHerramienta(Brazo b) => b.openRST != null ? b.openRST.Largo : 0f;
 
     /// <summary>
     /// Encaja un instante los trocares para leer la pose EXACTA que les da cada socket, y los devuelve
@@ -512,11 +525,18 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
             Transform t = p.trocar.transform, fTr = t.Find("PuntoEntrada");
             var mf = t.GetComponent<MeshFilter>();
             if (fTr == null || mf == null || mf.sharedMesh == null) continue;
+            var tqPrev = t.GetComponent<TrocarQuirurgico>();
+            if (tqPrev != null) tqPrev.RestaurarReposo();
             var pd = new PuertoDemo { indice = i, trocar = t, rb = t.GetComponent<Rigidbody>(), posDock = t.position, rotDock = t.rotation, estabaColocado = antes[i] };
+            pd.tq = t.GetComponent<TrocarQuirurgico>();
             pd.fulcroLocal = t.InverseTransformPoint(CentroFulcro(fTr));
-            // +X local del trocar = hacia el cabezal (afuera); -X = extremo de la cánula
-            pd.cabezalLocal = new Vector3(mf.sharedMesh.bounds.max.x, pd.fulcroLocal.y, pd.fulcroLocal.z);
-            pd.xPuntaLocal = mf.sharedMesh.bounds.min.x;
+            // El +X de PuntoEntrada es el eje real del tubo (hacia el cabezal); el tubo del modelo está
+            // inclinado unos grados respecto al +X del trocar.
+            pd.ejeLocal = t.InverseTransformDirection(fTr.right).normalized;
+            Bounds bm = mf.sharedMesh.bounds;
+            float ex = Mathf.Abs(pd.ejeLocal.x) > 0.1f ? pd.ejeLocal.x : 1f;
+            pd.cabezalLocal = pd.fulcroLocal + pd.ejeLocal * ((bm.max.x - pd.fulcroLocal.x) / ex);
+            pd.puntaLocal = pd.fulcroLocal + pd.ejeLocal * ((bm.min.x - pd.fulcroLocal.x) / ex);
             var solidos = new List<Collider>();
             foreach (var c in t.GetComponentsInChildren<Collider>(true)) if (!c.isTrigger && c.enabled) solidos.Add(c);
             pd.solidos = solidos.ToArray();
@@ -530,6 +550,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
             var p = preparacion.puertos[pd.indice];
             pd.kin = pd.rb != null && pd.rb.isKinematic;
             PonerTrocar(pd, p.posMesa, p.rotMesa, cinematico: true);
+            if (pd.tq != null) { pd.tq.obturadorAutomatico = false; pd.tq.PonerObturador(true); }
         }
     }
 
@@ -547,10 +568,8 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
     /// <summary>Pose del trocar sujeto por el cabezal en la pinza del brazo, coaxial con su herramienta.</summary>
     void PoseTrocarEnBrazo(Brazo b, PuertoDemo pd, out Vector3 pos, out Quaternion rot)
     {
-        Vector3 piv = intercambio.PosicionPivote(b.izq), ee = ExtremoBrazo(b);
-        Vector3 eje = ee - piv;
-        eje = eje.sqrMagnitude > 1e-6f ? eje.normalized : (intercambio.RotacionPivote(b.izq) * b.ik.ejeHerramientaLocal).normalized;
-        rot = Quaternion.FromToRotation(pd.rotDock * Vector3.left, eje) * pd.rotDock;
+        Vector3 ee = ExtremoBrazo(b), eje = EjeBrazo(b);
+        rot = Quaternion.FromToRotation(pd.rotDock * -pd.ejeLocal, eje) * pd.rotDock;
         pos = ee - rot * Vector3.Scale(pd.cabezalLocal, pd.trocar.lossyScale);
     }
 
@@ -574,11 +593,11 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         var pd = PuertoDemoDe(indice);
         if (pd == null) { preparacion.ColocarUno(indice); yield break; }
 
-        Vector3 d = pd.rotDock * Vector3.left;                        // eje del puerto, hacia dentro
+        Vector3 d = -(pd.rotDock * pd.ejeLocal);                      // eje del tubo, hacia dentro
         Vector3 fulcro = EnDock(pd, pd.fulcroLocal);
         Vector3 piel = fulcro - d * 0.01f;                            // el fulcro queda 1 cm bajo la piel
         Vector3 cabezal = EnDock(pd, pd.cabezalLocal);
-        Vector3 puntaCanula = EnDock(pd, new Vector3(pd.xPuntaLocal, pd.fulcroLocal.y, pd.fulcroLocal.z));
+        Vector3 puntaCanula = EnDock(pd, pd.puntaLocal);
         float L = LargoHerramienta(b);
         if (b.openRST != null) { b.openRST.Mostrar(); b.openRST.CambiarMordaza(InstrumentalOpenRST.Mordaza.Maryland); b.openRST.Apertura(0f); }
 
@@ -627,10 +646,48 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         }
         PonerTrocar(pd, pd.posDock, pd.rotDock, cinematico: pd.kin);
         preparacion.ColocarUno(indice);
-        if (b.openRST != null) b.openRST.Apertura(9f);
         yield return new WaitForSeconds(0.4f);
-        yield return MoverPivote(b, cabezal - d * (0.10f + L), d, velocidadDentro * 2f);
+
+        // 6) Con el trocar fijo, el brazo retira el obturador (punzón y mango): queda la cánula hueca
+        GameObject obturador = pd.tq != null ? pd.tq.SacarObturador() : null;
+        if (obturador != null)
+        {
+            obturador.transform.SetParent(raizDemo, true);
+            Vector3 ee0 = ExtremoBrazo(b), o0 = obturador.transform.position;
+            bool tirando = true;
+            StartCoroutine(Seguir(obturador.transform, () => o0 + (ExtremoBrazo(b) - ee0), () => tirando));
+            yield return MoverPivote(b, cabezal - d * (0.10f + L), d, velocidadDentro * 2f);
+            tirando = false;
+            yield return null;
+            if (b.openRST != null) b.openRST.Apertura(9f);
+            var mesa = preparacion.puertos[indice];
+            yield return VolarA(obturador.transform, pd.posDock - d * 0.23f, pd.rotDock, 0.7f);   // termina de salir por el eje
+            yield return VolarA(obturador.transform, mesa.posMesa, mesa.rotMesa, 1.3f);           // y queda en la mesa
+        }
+        else
+        {
+            if (b.openRST != null) b.openRST.Apertura(9f);
+            yield return MoverPivote(b, cabezal - d * (0.10f + L), d, velocidadDentro * 2f);
+        }
         foreach (var c in pd.solidos) if (c != null) c.enabled = true;
+    }
+
+    IEnumerator Seguir(Transform t, System.Func<Vector3> posicion, System.Func<bool> mientras)
+    {
+        while (t != null && mientras()) { t.position = posicion(); yield return null; }
+    }
+
+    IEnumerator VolarA(Transform t, Vector3 pos, Quaternion rot, float dur)
+    {
+        if (t == null) yield break;
+        Vector3 p0 = t.position; Quaternion r0 = t.rotation;
+        for (float x = 0; x < dur && t != null; x += Time.deltaTime)
+        {
+            float u = Mathf.SmoothStep(0f, 1f, x / dur);
+            t.SetPositionAndRotation(Vector3.Lerp(p0, pos, u), Quaternion.Slerp(r0, rot, u));
+            yield return null;
+        }
+        if (t != null) t.SetPositionAndRotation(pos, rot);
     }
 
     Transform CrearMarcaIncision(Vector3 piel, Vector3 d)
@@ -676,6 +733,8 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
             if (rb != null) { rb.position = p; rb.rotation = r; }
         };
         poner(p0, r0);
+        var trocarOptico = TrocarQuirurgico.De(preparacion.Fulcro(2));
+        if (trocarOptico != null) trocarOptico.AlinearCon(rf * ejeLocal);   // el trocar bascula hacia donde mira la óptica
         for (float t = 0; t < 1.6f; t += Time.deltaTime)
         {
             float u = Mathf.SmoothStep(0f, 1f, t / 1.6f);
@@ -697,6 +756,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         {
             if (pd.trocar == null) continue;
             pd.portador = null;
+            if (pd.tq != null) { pd.tq.RestaurarReposo(); pd.tq.obturadorAutomatico = true; }
             foreach (var c in pd.solidos) if (c != null) c.enabled = true;
             var p = preparacion != null && pd.indice < preparacion.puertos.Count ? preparacion.puertos[pd.indice] : null;
             if (p == null || p.socket == null) continue;
@@ -1051,8 +1111,8 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
 
     void ObjetivoAgarre(Brazo b, GameObject inst, Vector3 ejeLocal, Vector3 atrasLocal, out Vector3 pos, out Quaternion rot)
     {
-        Vector3 piv = intercambio.PosicionPivote(b.izq);
-        Vector3 ejeRobot = intercambio.RotacionPivote(b.izq) * b.ik.ejeHerramientaLocal;
+        Vector3 piv = Pivote(b);
+        Vector3 ejeRobot = EjeBrazo(b);
         Quaternion r = inst.transform.rotation;
         rot = Quaternion.FromToRotation(r * ejeLocal, ejeRobot) * r;
         if (usarInstrumentalOpenRST && b.openRST != null)
@@ -1061,7 +1121,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
             if (ptr != null)
             {
                 Vector3 local = inst.transform.InverseTransformPoint(ptr.position);
-                pos = b.openRST.eeLink.position - rot * Vector3.Scale(local, inst.transform.lossyScale);
+                pos = b.openRST.Extremo - rot * Vector3.Scale(local, inst.transform.lossyScale);
                 return;
             }
         }
@@ -1155,15 +1215,25 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         var punta = PuntaTr(inst); if (punta == null) yield break;
         var fulcro = inst.GetComponent<ControladorFulcroLaparoscopio>();
         Vector3 F = CentroFulcro(fulcroTr);
-        float largo = Vector3.Distance(intercambio.PosicionPivote(b.izq), punta.position);
-        Vector3 inicio = punta.position;
+        bool tubo = b.openRST != null;
+        float largo = tubo ? LargoHerramienta(b) : Vector3.Distance(Pivote(b), punta.position);
+        Vector3 inicio = tubo ? ExtremoBrazo(b) : punta.position;
+        // Tope de entrada: la base del tubo no pasa del cabezal del trocar
+        float altura = ControladorFulcroLaparoscopio.AlturaCabezalSobreFulcro(fulcroTr);
+        float profMax = largo - (altura > 0f ? altura + 0.005f : 0.02f);
         float dur = Mathf.Max(0.3f, Vector3.Distance(inicio, destino) / velocidad);
+        // Cerca del fulcro un movimiento corto de la punta es un giro grande del brazo: se limita a 12°/s
+        // para que la orientación no se atrase y el tubo siga pasando por el centro del trocar.
+        dur = Mathf.Max(dur, Vector3.Angle(inicio - F, destino - F) / 12f);
         for (float t = 0; t <= dur; t += Time.deltaTime)
         {
             Vector3 T = Vector3.Lerp(inicio, destino, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / dur)));
             Vector3 u = (T - F).normalized;
             Vector3 mano;
-            if (fulcro == null || !fulcro.CalcularManoParaPunta(T, punta, out mano))
+            if (tubo)
+                // El tubo visible pasa exactamente por el centro del fulcro, con la mordaza en T
+                mano = F + u * Mathf.Min(Vector3.Distance(T, F), profMax) - u * largo;
+            else if (fulcro == null || !fulcro.CalcularManoParaPunta(T, punta, out mano))
                 mano = T - u * largo; // sin anclaje (o clipadora): línea recta coaxial por el trocar
             b.objetivo = mano;
             b.eje = u;
@@ -1178,9 +1248,10 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         var inst = b.instrumento; var fTr = preparacion.Fulcro(puerto);
         if (inst == null || fTr == null) yield break;
         Transform puntaIns = PuntaTr(inst);
-        float largo = puntaIns != null ? Vector3.Distance(intercambio.PosicionPivote(b.izq), puntaIns.position) : 0.33f;
+        float largo = b.openRST != null ? LargoHerramienta(b)
+                    : (puntaIns != null ? Vector3.Distance(Pivote(b), puntaIns.position) : 0.33f);
         Vector3 F = CentroFulcro(fTr);
-        Vector3 d = -fTr.parent.right; // el +X local del trocar apunta hacia afuera (cabeza)
+        Vector3 d = -fTr.right; // el +X de PuntoEntrada es el eje del tubo, hacia afuera (cabezal)
         // Aproximación en dos tiempos para que el brazo no caiga de golpe sobre el trocar:
         // 1º a un punto de espera 6 cm por encima de la línea de inserción, 2º descenso lento ya alineado.
         // La punta espera FUERA del trocar (3 cm por encima de su cabezal) y entra por su eje:
@@ -1211,11 +1282,13 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         var inst = b.instrumento; var fTr = preparacion.Fulcro(puerto);
         if (inst == null || fTr == null) yield break;
         var punta = PuntaTr(inst); if (punta == null) yield break;
-        float largo = Vector3.Distance(intercambio.PosicionPivote(b.izq), punta.position);
+        bool tubo = b.openRST != null;
+        Vector3 puntaAhora = tubo ? ExtremoBrazo(b) : punta.position;
+        float largo = tubo ? LargoHerramienta(b) : Vector3.Distance(Pivote(b), punta.position);
         Vector3 F = CentroFulcro(fTr);
-        Vector3 u = (punta.position - F).normalized;
+        Vector3 u = (puntaAhora - F).normalized;
         // Sale por el eje hasta que la punta rebasa el cabezal del trocar (antes se quedaba dentro)
-        Vector3 desde = punta.position, hasta = F - u * FueraDelTrocar(fTr);
+        Vector3 desde = puntaAhora, hasta = F - u * FueraDelTrocar(fTr);
         float dur = Vector3.Distance(desde, hasta) / 0.06f;
         for (float t = 0; t <= dur; t += Time.deltaTime)
         {

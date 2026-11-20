@@ -60,6 +60,8 @@ public class PreparacionQuirurgica : MonoBehaviour
             p.posMesa = p.trocar.transform.position;
             p.rotMesa = p.trocar.transform.rotation;
             p.mesaValida = true;
+            // Pivote sobre el fulcro y retirada del obturador una vez colocado
+            if (p.trocar.GetComponent<TrocarQuirurgico>() == null) p.trocar.gameObject.AddComponent<TrocarQuirurgico>();
         }
     }
 

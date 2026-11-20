@@ -105,7 +105,25 @@ Detalles de implementación:
       que la punta sale por el cabezal; solo entonces queda libre. Antes se liberaba dentro de la cánula y podía
       atravesar sus paredes.
 - **`PreparacionQuirurgica`.** Guarda la pose de cada trocar en la mesa y añade `ColocarUno()`, `Liberar()` y
-  `EstaColocado()` por puerto.
+  `EstaColocado()` por puerto. También añade a cada trocar el componente `TrocarQuirurgico`.
+
+## Fulcro y trocares: que el instrumento vaya por el centro
+
+Lo que estaba mal y cómo quedó (medido en Play con la demo y con una mano simulada):
+
+| Problema | Causa | Arreglo |
+|---|---|---|
+| El instrumento cruzaba el trocar hasta a 35° | El trocar estaba rígido en su socket; con 20 cm de largo, cualquier giro de más de ~1° atraviesa la pared | **`TrocarQuirurgico`**: el trocar bascula alrededor de su fulcro siguiendo el eje del instrumento, y vuelve a su reposo al retirarlo |
+| El fulcro caía sobre la pared de la cánula | `PuntoEntrada` estaba en y=0, pero el tubo del modelo está centrado en y≈6,7 mm e inclinado 2,74° | `PuntoEntrada` movido al eje real del tubo; su +X local es ahora ese eje |
+| El instrumento atravesaba el mango negro | El modelo trae el **obturador** puesto (punzón y mango) | Al quedar el trocar en su puerto el obturador se retira y queda la cánula hueca; en la demo lo saca el brazo y lo deja en la mesa |
+| El instrumento pivotaba apoyado en su superficie | `Physics.ClosestPoint` da un punto de la superficie del tubo, no de su eje | El punto de pivote se proyecta sobre el eje del tubo (el que pasa por la punta activa) |
+| El brazo derecho se quedaba a 3–5 cm del trocar | No llegaba: con el codo recto le faltaban ~3 cm de alcance | El grupo `robots/ur10e` (robot derecho con su carro) está 15 cm más cerca de la cabecera |
+| La mordaza del OpenRST colgaba torcida | `pitch_link` y los dedos son articulaciones sin rigidez (el importador URDF pone stiffness 0) | La demo las sujeta con sus motores: muñeca recta y pinza a la apertura pedida. La IK controla el tubo rígido (`interface_link`), no un punto de los dedos |
+
+Resultado en la demo, con el instrumento dentro del trocar: el tubo pasa a 1–3 mm del centro y a menos de 1,7° del
+eje del trocar (antes 3–7 cm y hasta 35°), y la IK converge siempre.
+
+`TrocarQuirurgico` tiene dos opciones en el Inspector (durante Play): `obturadorAutomatico` y `tiempoRetorno`.
 - **`SofaInstrumentoQuirurgico`.** `ForzarAccion()` / `LiberarAccionForzada()` permiten controlar la acción SOFA desde código.
 
 ## Servidores Python (WSL: `~/PlanoFijo/`)

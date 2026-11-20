@@ -43,6 +43,17 @@ public class CinematicaBrazoUR
         ejeHerramientaLocal = (Quaternion.Inverse(pivoteRot) * d.normalized).normalized;
     }
 
+    /// <summary>
+    /// Redefine el eje de la herramienta como la recta pivote -> <paramref name="extremoMundo"/> (por ejemplo la
+    /// mordaza del instrumento montado), para que sea el tubo VISIBLE el que la IK alinea con el objetivo.
+    /// </summary>
+    public void FijarEjeHacia(Vector3 extremoMundo, Vector3 pivotePos, Quaternion pivoteRot)
+    {
+        Vector3 d = extremoMundo - pivotePos;
+        if (d.sqrMagnitude < 1e-6f) return;
+        ejeHerramientaLocal = (Quaternion.Inverse(pivoteRot) * d.normalized).normalized;
+    }
+
     /// <summary>Lee los ángulos reales actuales como punto de partida.</summary>
     public void LeerAngulosActuales()
     {

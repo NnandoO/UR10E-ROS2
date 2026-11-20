@@ -32,6 +32,7 @@ public class ControladorFulcroLaparoscopio : MonoBehaviour
     private float limiteBase;           // distancia mínima efectiva base -> fulcro
     private bool saliendoGuiado;        // la punta ya salió de la esfera del fulcro pero sigue dentro de la cánula
     private float baseAlSalir;
+    private TrocarQuirurgico trocarQuirurgico;   // el trocar pivota sobre su fulcro siguiendo a este instrumento
 
     /// <summary>Distancia (m) del fulcro al borde exterior del cabezal del trocar; 0 si no se puede medir.</summary>
     public static float AlturaCabezalSobreFulcro(Transform puntoEntrada)
@@ -39,9 +40,36 @@ public class ControladorFulcroLaparoscopio : MonoBehaviour
         Transform trocar = puntoEntrada != null ? puntoEntrada.parent : null;
         MeshFilter mf = trocar != null ? trocar.GetComponent<MeshFilter>() : null;
         if (mf == null || mf.sharedMesh == null) return 0f;
-        // El +X local del trocar apunta hacia afuera (cabezal)
+        // El +X local del trocar apunta hacia afuera (cabezal). Con el obturador retirado, el cabezal
+        // es la carcasa de la válvula, no el mango del obturador.
+        TrocarQuirurgico tq = trocar.GetComponent<TrocarQuirurgico>();
+        float xCabezal = tq != null ? tq.XCabezal : mf.sharedMesh.bounds.max.x;
         float xFulcro = trocar.InverseTransformPoint(puntoEntrada.position).x;
-        return Mathf.Clamp((mf.sharedMesh.bounds.max.x - xFulcro) * Mathf.Abs(trocar.lossyScale.x), 0f, 0.3f);
+        return Mathf.Clamp((xCabezal - xFulcro) * Mathf.Abs(trocar.lossyScale.x), 0f, 0.3f);
+    }
+
+    /// <summary>
+    /// Punto del eje del tubo del instrumento: la punta activa (su ancla) o, si no tiene, el centro de la malla.
+    /// Sirve para que sea el EJE del tubo, y no su superficie, lo que pase por el centro del trocar.
+    /// </summary>
+    private bool PuntoDelEjeDelTubo(out Vector3 punto)
+    {
+        foreach (Transform hijo in transform)
+        {
+            if (hijo.name.StartsWith("AnclaPunta") || hijo.name.StartsWith("PuntaActiva") || hijo.name == "PuntaDemo")
+            {
+                punto = hijo.position;
+                return true;
+            }
+        }
+        MeshFilter mf = GetComponent<MeshFilter>();
+        if (mf != null && mf.sharedMesh != null)
+        {
+            punto = transform.TransformPoint(mf.sharedMesh.bounds.center);
+            return true;
+        }
+        punto = transform.position;
+        return false;
     }
 
     // Lista compartida entre todos los instrumentos para saber qué trocares ya están ocupados
@@ -224,6 +252,7 @@ public class ControladorFulcroLaparoscopio : MonoBehaviour
             trocaresOcupados.Add(trocarActual);
             alturaCabezal = AlturaCabezalSobreFulcro(trocarActual);
             limiteBase = distanciaMinimaAlFulcro;
+            trocarQuirurgico = TrocarQuirurgico.De(trocarActual);
 
             if (mandoVRActual != null)
             {
@@ -254,6 +283,8 @@ public class ControladorFulcroLaparoscopio : MonoBehaviour
     private void LiberarTrocar()
     {
         if (trocarActual != null) trocaresOcupados.Remove(trocarActual);
+        if (trocarQuirurgico != null) trocarQuirurgico.LiberarAlineacion();
+        trocarQuirurgico = null;
         estaAnclado = false;
         saliendoGuiado = false;
         trocarActual = null;
@@ -298,9 +329,14 @@ public class ControladorFulcroLaparoscopio : MonoBehaviour
             puntoTuboEnMundo = Physics.ClosestPoint(centroEsfera, miCollider, miCollider.transform.position, miCollider.transform.rotation);
         }
 
-        puntoLocalEnElTubo = transform.InverseTransformPoint(puntoTuboEnMundo);
-
         Vector3 direccionMundoDelTubo = DetectarDireccionLargaDelTubo(centroEsfera - mandoVRActual.position);
+
+        // ClosestPoint da un punto de la SUPERFICIE del tubo: se proyecta sobre su eje para que el
+        // instrumento pivote centrado en el trocar y no apoyado en la pared de la cánula.
+        if (PuntoDelEjeDelTubo(out Vector3 puntoDelEje))
+            puntoTuboEnMundo = puntoDelEje + direccionMundoDelTubo * Vector3.Dot(puntoTuboEnMundo - puntoDelEje, direccionMundoDelTubo);
+
+        puntoLocalEnElTubo = transform.InverseTransformPoint(puntoTuboEnMundo);
         direccionInicialTubo = direccionMundoDelTubo;
         ejeLocalTuboHaciaAdentro = transform.InverseTransformDirection(direccionMundoDelTubo).normalized;
 
@@ -420,5 +456,8 @@ public class ControladorFulcroLaparoscopio : MonoBehaviour
 
         Vector3 desfasePadreAPuntoTubo = transform.TransformPoint(puntoLocalEnElTubo) - transform.position;
         transform.position = posicionObjetivoPuntoTubo - desfasePadreAPuntoTubo;
+
+        // El trocar bascula en la pared abdominal siguiendo al instrumento que lo atraviesa
+        if (trocarQuirurgico != null) trocarQuirurgico.AlinearCon(direccionActualAlCentro);
     }
 }
