@@ -50,15 +50,16 @@
 
 La demo sigue el procedimiento estándar y dura unos 3 minutos:
 
-0. **Incisiones, puertos y docking (flujo daVinci).** Los trocares empiezan en la mesa. Cada brazo hace la incisión en la piel con su pinza OpenRST (queda una marca de ~14 mm), recibe el trocar, lo introduce por el eje del puerto y lo deja encajado en su socket. Primero el puerto óptico (umbilical, brazo derecho) y el axilar derecho (brazo izquierdo) a la vez; entra el laparoscopio; y por último el puerto del cuadrante superior izquierdo, ya bajo visión.
+0. **Insuflación, puertos y docking (flujo daVinci y video guía).** Insuflación de CO2. Primero el puerto de la óptica en el umbilical, después se introduce el laparoscopio; ya con la óptica dentro, cada brazo hace la incisión en la piel (marca de ~14 mm), recibe su trocar de trabajo, lo introduce por el eje del puerto y lo deja encajado: primero el axilar derecho (grasper) y después el cuadrante superior izquierdo (disector).
 1. **Entrega e inserción:** el grasper va al brazo izquierdo y el hook al derecho. Entran por sus trocares, quedan anclados y pivotan en el fulcro.
 2. **Tracción del fondo vesicular** con el grasper, hacia arriba y hacia la cabeza (agarre **SOFA** real).
-3. **Disección del triángulo de Calot** con el hook (electrocauterio), hasta la **visión crítica de seguridad**: el conducto y la arteria císticos quedan expuestos.
+3. **Disección del triángulo de Calot** con el hook (electrocauterio), hasta la **visión crítica de seguridad**. La narración comprueba los tres criterios del video guía: triángulo hepatocístico despejado, tercio inferior de la vesícula separado de la placa cística, y sólo el conducto cístico entrando en la vesícula. **La arteria cística no se modela** (el modelo SOFA sólo tiene el conducto), así que no se clipa ni se secciona.
 4. **Clipado.** Cambio de hook por **clipadora**. En la arteria y en el conducto se colocan **2 clips del lado del paciente y 1 del lado de la vesícula**.
 5. **Sección entre clips.** Cambio de clipadora por tijera; se cortan la arteria y luego el conducto.
 6. **Disección del lecho hepático.** Cambio de tijera por hook; se separa la vesícula del cuello al fondo.
-7. **Extracción.** La vesícula sale por el trocar sujeta por el grasper y se deposita en una bandeja de la mesa de instrumental, con sus muñones y su clip.
+7. **Extracción.** La vesícula se introduce en una **bolsa de extracción transparente** (endobag, como en el video guía), sale por el trocar sujeta por el grasper y se deposita en una bandeja de la mesa de instrumental.
 8. **Revisión:** los muñones quedan cerrados con dos clips cada uno. Se retiran los instrumentos y los brazos vuelven a su pose.
+9. **Retirada de la óptica y de los trocares.** Como en el video guía: sale el laparoscopio y después cada trocar por su incisión; las incisiones se cierran a una línea fina y los trocares y la óptica vuelven a la mesa con su obturador. Al terminar, los trocares quedan en la mesa (cinemáticos) y se pueden volver a colocar a mano.
 
 Detalles de implementación:
 

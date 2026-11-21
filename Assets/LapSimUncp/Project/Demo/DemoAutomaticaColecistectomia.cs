@@ -120,8 +120,10 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         public TrocarQuirurgico tq;
         public bool estabaColocado, kin;
         public Brazo portador;                               // brazo que lo lleva en la pinza (o null)
+        public GameObject obturador;                         // obturador retirado del trocar (vuelve al trocar al terminar)
     }
     private readonly List<PuertoDemo> puertosDemo = new List<PuertoDemo>();
+    private readonly Dictionary<int, Transform> marcasIncision = new Dictionary<int, Transform>();
 
     // ==================================================================
     // API
@@ -215,12 +217,11 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         yield return new WaitForSeconds(pausaEntreFases);
 
         // ---------- 0. Incisiones, puertos y docking (flujo daVinci) ----------
-        Narrar("0 · Incisiones y colocación de puertos", "Como en el docking de un sistema daVinci: cada brazo hace la incisión, introduce su trocar por la pared abdominal y queda acoplado a su puerto. Primero el puerto óptico (umbilical) y el axilar derecho.");
-        var c1 = StartCoroutine(ColocarPuerto(der, 2));
-        var c2 = StartCoroutine(ColocarPuerto(izq, 1));
-        yield return c1; yield return c2;
+        Narrar("0 · Insuflación e incisión de la óptica", "Insuflación de CO2 para crear el neumoperitoneo. Como en el video guía, primero se coloca el puerto de la óptica en el umbilical y después se introduce el laparoscopio para ver el abdomen.");
+        yield return ColocarPuerto(der, 2);
         yield return IntroducirLaparoscopio();
-        Narrar("0 · Incisiones y colocación de puertos", "Con la óptica dentro, el último puerto de trabajo (cuadrante superior izquierdo) se coloca bajo visión directa. El fulcro de cada trocar será el centro de movimiento remoto de su instrumento.");
+        Narrar("0 · Puertos de trabajo bajo visión", "Con la óptica dentro, cada brazo coloca su puerto de trabajo: primero el axilar derecho (grasper) y después el cuadrante superior izquierdo (disector). El fulcro de cada trocar será el centro de movimiento remoto de su instrumento.");
+        yield return ColocarPuerto(izq, 1);
         yield return ColocarPuerto(der, 0);
         float t0 = Time.time;
         while (!preparacion.TodosColocados() && Time.time - t0 < 3f) yield return null;
@@ -251,7 +252,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         yield return new WaitForSeconds(pausaEntreFases * 0.5f);
 
         // ---------- 3. Disección del triángulo de Calot ----------
-        Narrar("3 · Disección del triángulo de Calot", "El Hook abre el peritoneo y libera la grasa alrededor del conducto cístico, la única estructura que entra en la vesícula en este modelo (visión crítica de seguridad).");
+        Narrar("3 · Disección del triángulo de Calot", "El Hook abre el peritoneo y libera la grasa del triángulo de Calot hasta exponer el conducto cístico, que es la única estructura que entra en la vesícula en este modelo.");
         MarcarZona(zonaCistica, 0.014f);
         if (!CalcularDucto()) Debug.LogWarning("🤖 Demo: no se pudo medir el conducto cístico en la malla SOFA.");
         float[] barridoDiseccion = { 0.030f, 0.026f, 0.034f, 0.030f };
@@ -261,7 +262,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
             Cauterizar(hook, 0.4f);
             yield return new WaitForSeconds(0.4f);
         }
-        Narrar("Visión crítica de seguridad", "El conducto cístico queda disecado y expuesto en todo su contorno, con su arteria incluida en el pedículo. Ya se puede clipar.");
+        Narrar("Visión crítica de seguridad", "Se comprueban los tres criterios de la visión crítica de seguridad: 1) el triángulo hepatocístico está despejado de grasa y tejido fibroso; 2) el tercio inferior de la vesícula está separado de la placa cística; 3) sólo entra en la vesícula lo que debe, aquí únicamente el conducto cístico. Entonces se puede clipar.");
         yield return new WaitForSeconds(pausaEntreFases * 1.5f);
 
         // ---------- 4. Clipado ----------
@@ -352,9 +353,10 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         yield return new WaitForSeconds(pausaEntreFases * 0.5f);
 
         // ---------- 7. Extracción ----------
-        Narrar("7 · Extracción de la vesícula", "La vesícula, ya libre del lecho hepático, sale por el trocar sujeta por el Grasper y se entrega en la bandeja para estudio anatomopatológico.");
+        Narrar("7 · Extracción de la vesícula", "La vesícula, ya libre del lecho hepático, se introduce en una bolsa de extracción transparente y sale por el trocar sujeta por el Grasper. Después se entrega en la bandeja para estudio anatomopatológico.");
         Accion(grasper, false);
         SepararVesicula();
+        CrearBolsaExtraccion();
         yield return new WaitForSeconds(0.6f);
         yield return Retirar(izq, 1);
         yield return DepositarEnBandeja();
@@ -369,7 +371,15 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         yield return new WaitForSeconds(pausaEntreFases);
         MarcarZona(null);
 
-        Narrar("Colecistectomía completada", "Tracción, disección de Calot, clipado, sección entre clips, disección del lecho y extracción. Pulsa M (o Menú) para volver a Simular operación.");
+        // ---------- 9. Retirada de la óptica, de los trocares y cierre ----------
+        Narrar("9 · Retirada de la óptica y de los trocares", "Como en el video guía: se retira el laparoscopio y después cada trocar por su incisión. Las incisiones se cierran.");
+        yield return RetirarLaparoscopio();
+        yield return RetirarTrocar(0);
+        yield return RetirarTrocar(1);
+        yield return RetirarTrocar(2);
+        yield return new WaitForSeconds(pausaEntreFases * 0.5f);
+
+        Narrar("Colecistectomía completada", "Visión crítica, clipado del conducto, sección entre clips, disección del lecho, extracción en bolsa y retirada de trocares. Pulsa M (o Menú) para volver a Simular operación.");
         Restaurar(inmediato: false);
         rutina = null;
     }
@@ -444,7 +454,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
             b.activo = false;
             b.seg.PausadoPorDemo = false;
         }
-        RestaurarPuertos();
+        RestaurarPuertos(inmediato);
         if (inmediato)
             foreach (var kv in posesMesa) ColocarEnMesa(kv.Key, kv.Value);
         foreach (var v in desactivados) if (v != null) v.enabled = true;
@@ -470,6 +480,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
             foreach (bool lado in new[] { false, true })
                 if (intercambio.InstrumentoEnBrazo(lado) == clipadora) intercambio.SoltarDelBrazo(lado);
         clipadora = null; efectoCauterio = null; vesiculaExtraida = null; munonExtra = null; bandeja = null;
+        marcasIncision.Clear();
         clipsPaciente.Clear(); clipVesicula = null;
         if (rendVesiculaSofa != null) rendVesiculaSofa.enabled = true; // la vesícula SOFA vuelve a verse
         rendVesiculaSofa = null;
@@ -608,6 +619,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         Vector3 toque = piel + d * 0.003f;
         yield return MoverPivote(b, toque - d * L, d, velocidadDentro * 1.5f);
         Transform marca = CrearMarcaIncision(piel, d);
+        marcasIncision[indice] = marca;
         Vector3 lat = marca.right;
         StartCoroutine(CrecerMarca(marca, 1.4f));
         yield return MoverPivote(b, toque + lat * 0.006f - d * L, d, velocidadDentro);
@@ -650,6 +662,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
 
         // 6) Con el trocar fijo, el brazo retira el obturador (punzón y mango): queda la cánula hueca
         GameObject obturador = pd.tq != null ? pd.tq.SacarObturador() : null;
+        pd.obturador = obturador;
         if (obturador != null)
         {
             obturador.transform.SetParent(raizDemo, true);
@@ -750,8 +763,23 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
     }
 
     /// <summary>Deja los puertos en un estado coherente al terminar o cancelar la demo.</summary>
-    void RestaurarPuertos()
+    void RestaurarPuertos(bool inmediato)
     {
+        if (!inmediato)
+        {
+            // Tras la demo completa los trocares ya están retirados sobre la mesa: no se vuelven a colocar
+            foreach (var pd in puertosDemo)
+            {
+                foreach (var c in pd.solidos) if (c != null) c.enabled = true;
+                // Quedan cinemáticos y en su pose de mesa: si fueran dinámicos la física los empujaría
+                if (pd.rb != null) { pd.rb.isKinematic = true; pd.rb.linearVelocity = Vector3.zero; pd.rb.angularVelocity = Vector3.zero; }
+                var mesa = preparacion.puertos[pd.indice];
+                if (mesa.trocar != null) PonerTrocar(pd, mesa.posMesa, mesa.rotMesa, cinematico: true);
+            }
+            foreach (var p in preparacion.puertos) if (p.socket != null) p.socket.socketActive = true;
+            puertosDemo.Clear();
+            return;
+        }
         foreach (var pd in puertosDemo)
         {
             if (pd.trocar == null) continue;
@@ -983,6 +1011,65 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         go.AddComponent<MeshFilter>().sharedMesh = m;
         go.AddComponent<MeshRenderer>().sharedMaterials = rendVesiculaSofa.sharedMaterials;
         return go;
+    }
+
+    /// <summary>La vesícula se introduce en una bolsa de extracción transparente (endobag, como en el video guía).</summary>
+    void CrearBolsaExtraccion()
+    {
+        if (vesiculaExtraida == null) return;
+        var mf = vesiculaExtraida.GetComponent<MeshFilter>();
+        if (mf == null || mf.sharedMesh == null) return;
+        Bounds mb = mf.sharedMesh.bounds;               // en el marco de la vesícula, así sigue su orientación
+        var bolsa = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        DestroyImmediate(bolsa.GetComponent<Collider>());
+        bolsa.name = "BolsaExtraccion";
+        bolsa.transform.SetParent(vesiculaExtraida.transform, false);
+        bolsa.transform.localPosition = mb.center;
+        bolsa.transform.localScale = mb.size * 1.25f;
+        var r = bolsa.GetComponent<MeshRenderer>();
+        r.sharedMaterial = EstructuraTubular.CrearMaterial(new Color(0.75f, 0.9f, 1f, 0.18f), true);
+        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    }
+
+    IEnumerator RetirarLaparoscopio()
+    {
+        if (laparoscopio == null) yield break;
+        var t = laparoscopio.transform;
+        var f = preparacion.Fulcro(2);
+        if (f != null) yield return VolarA(t, t.position + f.right * 0.30f, t.rotation, 1.4f);   // sale por la cánula
+        RestaurarCamaraLaparoscopio();
+        if (posesMesa.TryGetValue(laparoscopio, out var pose)) yield return VolarA(t, pose.p, pose.r, 1.6f);
+    }
+
+    /// <summary>Saca el trocar de su incisión, lo devuelve a la mesa con su obturador y cierra la incisión.</summary>
+    IEnumerator RetirarTrocar(int indice)
+    {
+        if (indice < 0 || indice >= preparacion.puertos.Count) yield break;
+        var p = preparacion.puertos[indice];
+        if (p.trocar == null) yield break;
+        var t = p.trocar.transform;
+        var f = preparacion.Fulcro(indice);
+        var pd = PuertoDemoDe(indice);
+        if (pd != null && pd.obturador != null) { Destroy(pd.obturador); pd.obturador = null; }
+        preparacion.Liberar(indice, desactivarSocket: true);
+        yield return null;
+        if (pd != null && pd.tq != null) { pd.tq.obturadorAutomatico = true; pd.tq.PonerObturador(true); }
+        if (marcasIncision.TryGetValue(indice, out var marca)) StartCoroutine(CerrarMarca(marca, 1.2f));
+        Vector3 fuera = f != null ? f.right : t.right;
+        yield return VolarA(t, t.position + fuera * 0.25f, t.rotation, 0.9f);
+        yield return VolarA(t, p.posMesa, p.rotMesa, 1.4f);
+    }
+
+    IEnumerator CerrarMarca(Transform marca, float dur)
+    {
+        if (marca == null) yield break;
+        Vector3 s0 = marca.localScale;
+        for (float x = 0; x < dur && marca != null; x += Time.deltaTime)
+        {
+            float u = Mathf.SmoothStep(0f, 1f, x / dur);
+            marca.localScale = new Vector3(Mathf.Lerp(s0.x, 0.0015f, u), s0.y, s0.z);   // queda como una línea fina
+            yield return null;
+        }
     }
 
     IEnumerator DepositarEnBandeja()
