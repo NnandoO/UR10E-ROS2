@@ -133,6 +133,44 @@ public class PreparacionQuirurgica : MonoBehaviour
         if (desactivarSocket) p.socket.socketActive = false;
     }
 
+    /// <summary>
+    /// Los tres trocares son iguales: si en el socket de este puerto se encajó el trocar asignado a otro
+    /// puerto, se intercambian las asignaciones. Devuelve el índice del otro puerto, o -1 si no hubo cambio.
+    /// </summary>
+    public int AdoptarTrocarEncajado(int indice)
+    {
+        var p = PuertoValido(indice);
+        if (p == null || !p.socket.hasSelection) return -1;
+        var encajado = p.socket.firstInteractableSelected as XRGrabInteractable;
+        if (encajado == null || encajado == p.trocar) return -1;
+        for (int j = 0; j < puertos.Count; j++)
+        {
+            if (j == indice || puertos[j].trocar != encajado) continue;
+            IntercambiarTrocares(indice, j);
+            return j;
+        }
+        return -1;
+    }
+
+    /// <summary>Intercambia qué trocar corresponde a cada uno de dos puertos (los tres trocares son iguales).</summary>
+    public void IntercambiarTrocares(int i, int j)
+    {
+        if (i == j || i < 0 || j < 0 || i >= puertos.Count || j >= puertos.Count) return;
+        Puerto a = puertos[i], b = puertos[j];
+        (a.trocar, b.trocar) = (b.trocar, a.trocar);
+        (a.posMesa, b.posMesa) = (b.posMesa, a.posMesa);
+        (a.rotMesa, b.rotMesa) = (b.rotMesa, a.rotMesa);
+    }
+
+    /// <summary>Si alguien tiene agarrado con la mano el trocar de este puerto, lo suelta.</summary>
+    public void SoltarDeLaMano(int indice)
+    {
+        var p = PuertoValido(indice);
+        if (p == null || !p.trocar.isSelected || EstaColocado(indice)) return;
+        var manager = Manager(p);
+        if (manager != null) manager.CancelInteractableSelection((IXRSelectInteractable)p.trocar);
+    }
+
     /// <summary>¿Están todos los trocares en sus sockets?</summary>
     public bool TodosColocados()
     {

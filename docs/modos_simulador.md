@@ -6,10 +6,12 @@
 |---|---|---|
 | **Simular operación (VR)** | Lo que ya tenías: te pones los lentes, la punta de cada brazo sigue tu mando y, cuando agarras un instrumento, salta a la punta del robot. | Sí (`seguimientoR.py` / `seguimientoL.py`) |
 | **Ejecutar demo** | Los dos brazos operan solos (ver más abajo). Tú observas. | **No** |
+| **Operación manual (Quest 3)** | Haces tú toda la colecistectomía teleoperando los instrumentos con los mandos, paso a paso. Guía en `docs/guia_operacion_manual_quest3.md`. | **No** |
 | **Procedimiento guiado** | Operas tú, con marcadores y hologramas paso a paso. | Sí |
 
 ## Escena
 
+- **Órganos blandos.** En `Escena_final.scn` solo quedan fijos los nodos de anclaje anatómico (`FixedConstraint`: lecho y extremo del conducto en la vesícula, cara posterior y cúpula en el hígado, cara posterior en duodeno y estómago). El resorte de reposo por nodo bajó de 400–4500 a 0,2–1 y el módulo de Young a 8 000–12 000, así que al tirar se deforma una región del órgano y no un solo vértice. Detalle y medidas en `docs/plan_operacion_manual_vr.md`.
 - **Órganos SOFA dentro del cuerpo.** `SofaContext` se movió (-3 cm, -7,9 cm, +5 cm). El hígado queda bajo el reborde costal derecho, la vesícula junto al reborde y el estómago a la izquierda. SofaUnity convierte los rayos de corte y agarre con la transformación de `SofaContext`, así que la física no cambia.
 - **Materiales de órganos** en `Assets/LapSimUncp/Materials/Organos/`: hígado, vesícula, estómago y duodeno.
 - **Puertos de trocar.** Cada socket está orientado hacia la vesícula y el trocar entra unos 4,5 cm por la pared:
@@ -50,7 +52,7 @@
 
 La demo sigue el procedimiento estándar y dura unos 3 minutos:
 
-0. **Insuflación, puertos y docking (flujo daVinci y video guía).** Insuflación de CO2. Primero el puerto de la óptica en el umbilical, después se introduce el laparoscopio; ya con la óptica dentro, cada brazo hace la incisión en la piel (marca de ~14 mm), recibe su trocar de trabajo, lo introduce por el eje del puerto y lo deja encajado: primero el axilar derecho (grasper) y después el cuadrante superior izquierdo (disector).
+0. **Insuflación, puertos y docking (flujo daVinci y video guía).** Insuflación de CO2. Primero el puerto de la óptica (en el modelo, en el umbilical; en el video guía entra por el cuadrante superior izquierdo, después del punto de Palmer), después se introduce el laparoscopio; ya con la óptica dentro, cada brazo hace la incisión en la piel (marca de ~14 mm), recibe su trocar de trabajo, lo introduce por el eje del puerto y lo deja encajado: primero el axilar derecho (grasper) y después el cuadrante superior izquierdo (disector).
 1. **Entrega e inserción:** el grasper va al brazo izquierdo y el hook al derecho. Entran por sus trocares, quedan anclados y pivotan en el fulcro.
 2. **Tracción del fondo vesicular** con el grasper, hacia arriba y hacia la cabeza (agarre **SOFA** real).
 3. **Disección del triángulo de Calot** con el hook (electrocauterio), hasta la **visión crítica de seguridad**. La narración comprueba los tres criterios del video guía: triángulo hepatocístico despejado, tercio inferior de la vesícula separado de la placa cística, y sólo el conducto cístico entrando en la vesícula. **La arteria cística no se modela** (el modelo SOFA sólo tiene el conducto), así que no se clipa ni se secciona.
@@ -80,8 +82,7 @@ Detalles de implementación:
   Se controla con `usarInstrumentalOpenRST` en el Inspector.
 - **El conducto cístico es REAL**: es la cola fina de la malla SOFA de la vesícula (`VESICULA.msh`, remallada con
   tetraedros de ~5 mm para que el corte funcione). No se añade ninguna estructura que no exista en el modelo.
-- **Clips tipo Hem-o-lok** (polímero violeta, como en el video guía: "Colecistectomía Laparoscópica con el Sistema
-  Weck Hem-o-lok"): 2 del lado del paciente y 1 del lado de la vesícula.
+- **Clips de titanio** (plateados, como en el video guía de colecistectomía laparoscópica): 2 del lado del paciente y 1 del lado de la vesícula. Del video sólo puedo confirmar el aplicador de clips y que el conducto queda clipado antes de cortarlo; el número exacto de clips no lo pude contar con certeza.
 - **El corte es corte SOFA real.** El rayo de corte talla donde golpea la superficie, así que la tijera se queda a
   9 mm del conducto y el rayo, dirigido con `apuntarHacia` (`SofaInstrumentoQuirurgico`), barre en abanico el disco
   de la sección saliendo hacia el lado libre. La demo verifica con `VesiculaSeccionada()` (componentes conexas de la

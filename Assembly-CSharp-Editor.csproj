@@ -70,6 +70,7 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Editor\Components\SofaBeamAdapterEditor.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Editor\Objects\SofaBoxEditor.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Editor\Objects\SofaPlaneEditor.cs" />
+    <Compile Include="Assets\Editor\ReconectarMCP.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Editor\DAGNode\SofaDAGNodeEditor.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Editor\Objects\SofaGridEditor.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Editor\Objects\SofaMeshObjectEditor.cs" />
