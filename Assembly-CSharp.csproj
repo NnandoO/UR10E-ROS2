@@ -52,6 +52,7 @@
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaMechanicalMapping.cs" />
     <Compile Include="Assets\SofaUnity\Core\Plugins\SofaUnityAPI\SofaContextAPI.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\SofaBotonPersonalizado.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Escena\PosturaPaciente.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Base\SofaBaseData.cs" />
     <Compile Include="Assets\LapSimUncp\Project\TactGloveSeguro.cs" />
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\CameraSwitcherVR.cs" />
@@ -143,6 +144,7 @@
     <Compile Include="Assets\SofaUnityXR\Scripts\VRTools\TriggerLaser.cs" />
     <Compile Include="Assets\LapSimUncp\Project\Scripts\DuplicadorInstrumentoRobot.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\Controllers\ObjectController.cs" />
+    <Compile Include="Assets\LapSimUncp\Project\Demo\OperacionManualVR.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Topology\TopologyElements.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Modules\GridObjects\SofaRigidBox.cs" />
     <Compile Include="Assets\SofaUnity\Core\Scripts\Core\Components\SofaConstraint.cs" />

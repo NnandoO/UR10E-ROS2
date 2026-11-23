@@ -24,7 +24,7 @@ using UnityEngine;
 /// corte actúan sobre tejido real; no se añade ninguna estructura que no exista en el modelo. Al salir del modo
 /// todo vuelve a como estaba (los cortes SOFA permanecen hasta reiniciar Play).
 /// </summary>
-public class DemoAutomaticaColecistectomia : MonoBehaviour
+public partial class DemoAutomaticaColecistectomia : MonoBehaviour
 {
     [Header("Brazos")]
     public seguimiento brazoDerecho;
@@ -82,6 +82,17 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         public float errorIK;
         public InstrumentalOpenRST openRST;
         public readonly List<Renderer> ocultosOpenRST = new List<Renderer>();
+        // Operación manual: teleoperación de la punta a través del trocar
+        public bool teleop, moviendo, trinquete, accionPrev;
+        public Transform fulcroTr;
+        public Vector3 puntaDeseada, pendiente, manoPrev;
+        public Vector3 inicioLibre;
+        public bool ocupado;          // el asistente está haciendo una maniobra con este brazo
+        public bool dentro;           // su instrumento está introducido en el trocar
+        public bool gripPrev, ignorarGrip;
+        public PuertoDemo trocarEnPinza;
+        public Quaternion rotManoPrev = Quaternion.identity;
+        public float profMin = 0.01f;
     }
 
     private class Pose { public Vector3 p; public Quaternion r; public bool kin; public bool grav; }
@@ -144,6 +155,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
     {
         if (rutina != null) StopCoroutine(rutina);
         rutina = null;
+        if (cerrando) { Ejecutando = false; ManualActiva = false; return; }   // al cerrar, la escena ya se está destruyendo
         if (Ejecutando) Restaurar(inmediato: true);
         if (narracionActiva && narrador != null) narrador.DetenerDemo();
         if (narracionActiva && vista != null) vista.AplicarModo(vistaPrevia);
@@ -194,6 +206,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
     void Update()
     {
         if (!Ejecutando) return;
+        ActualizarManual();   // operación manual: los mandos fijan el objetivo de cada brazo
         foreach (var b in new[] { der, izq })
         {
             if (b == null || !b.activo) continue;
@@ -217,7 +230,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         yield return new WaitForSeconds(pausaEntreFases);
 
         // ---------- 0. Incisiones, puertos y docking (flujo daVinci) ----------
-        Narrar("0 · Insuflación e incisión de la óptica", "Insuflación de CO2 para crear el neumoperitoneo. Como en el video guía, primero se coloca el puerto de la óptica en el umbilical y después se introduce el laparoscopio para ver el abdomen.");
+        Narrar("0 · Insuflación e incisión de la óptica", "Insuflación de CO2 para crear el neumoperitoneo. Primero se coloca el puerto de la óptica y después se introduce el laparoscopio para ver el abdomen.");
         yield return ColocarPuerto(der, 2);
         yield return IntroducirLaparoscopio();
         Narrar("0 · Puertos de trabajo bajo visión", "Con la óptica dentro, cada brazo coloca su puerto de trabajo: primero el axilar derecho (grasper) y después el cuadrante superior izquierdo (disector). El fulcro de cada trocar será el centro de movimiento remoto de su instrumento.");
@@ -266,7 +279,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         yield return new WaitForSeconds(pausaEntreFases * 1.5f);
 
         // ---------- 4. Clipado ----------
-        Narrar("4 · Clipado del conducto cístico", "Cambio de instrumento: disector por aplicador automático de clips de polímero (técnica Hem-o-lok del video guía). Dos clips del lado del paciente y uno del lado de la vesícula, sobre el conducto cístico real.");
+        Narrar("4 · Clipado del conducto cístico", "Cambio de instrumento: disector por aplicador automático de clips, como en el video guía. Dos clips del lado del paciente y uno del lado de la vesícula, sobre el conducto cístico real.");
         MarcarZona(null);
         yield return CambiarInstrumento(der, 0, clipadora);
         sCorte = 0.0305f;
@@ -440,6 +453,7 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
 
     void Restaurar(bool inmediato)
     {
+        if (ManualActiva) FinManual();
         foreach (var go in new[] { grasper, tijera, hook })
         {
             var p = Punta(go); if (p != null) { p.ForzarAccion(false); p.LiberarAccionForzada(); }
@@ -880,12 +894,12 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         DestroyImmediate(clip.GetComponent<Collider>());
         clip.name = $"Clip_{s * 1000f:F0}mm";
         clip.transform.SetParent(raizDemo, true);
-        clip.transform.localScale = new Vector3(0.0024f, 0.012f, 0.0019f);   // clip de polímero tipo Hem-o-lok
+        clip.transform.localScale = new Vector3(0.0024f, 0.012f, 0.0019f);   // clip de titanio/metal, como en el video guía
         Vector3 perp = Vector3.Cross(tang, Vector3.up);
         if (perp.sqrMagnitude < 1e-6f) perp = Vector3.Cross(tang, Vector3.right);
         clip.transform.SetPositionAndRotation(p, Quaternion.LookRotation(tang, perp.normalized));
-        var mc = EstructuraTubular.CrearMaterial(new Color(0.46f, 0.22f, 0.58f), false);   // polímero violeta (Hem-o-lok)
-        mc.SetFloat("_Metallic", 0.05f); mc.SetFloat("_Smoothness", 0.45f);
+        var mc = EstructuraTubular.CrearMaterial(new Color(0.85f, 0.86f, 0.89f), false);   // clip metálico plateado, como en los fotogramas del video
+        mc.SetFloat("_Metallic", 0.9f); mc.SetFloat("_Smoothness", 0.7f);
         var r = clip.GetComponent<MeshRenderer>();
         r.sharedMaterial = mc;
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -1053,11 +1067,20 @@ public class DemoAutomaticaColecistectomia : MonoBehaviour
         if (pd != null && pd.obturador != null) { Destroy(pd.obturador); pd.obturador = null; }
         preparacion.Liberar(indice, desactivarSocket: true);
         yield return null;
+        // Al salir del socket el trocar vuelve a ser dinámico: se deja cinemático para que la física no lo
+        // empuje mientras viaja a la mesa ni cuando queda apoyado en ella.
+        var rbTrocar = p.trocar.GetComponent<Rigidbody>();
+        if (rbTrocar != null)
+        {
+            if (!rbTrocar.isKinematic) { rbTrocar.linearVelocity = Vector3.zero; rbTrocar.angularVelocity = Vector3.zero; }
+            rbTrocar.isKinematic = true;
+        }
         if (pd != null && pd.tq != null) { pd.tq.obturadorAutomatico = true; pd.tq.PonerObturador(true); }
         if (marcasIncision.TryGetValue(indice, out var marca)) StartCoroutine(CerrarMarca(marca, 1.2f));
         Vector3 fuera = f != null ? f.right : t.right;
         yield return VolarA(t, t.position + fuera * 0.25f, t.rotation, 0.9f);
         yield return VolarA(t, p.posMesa, p.rotMesa, 1.4f);
+        if (rbTrocar != null) { rbTrocar.position = p.posMesa; rbTrocar.rotation = p.rotMesa; }
     }
 
     IEnumerator CerrarMarca(Transform marca, float dur)

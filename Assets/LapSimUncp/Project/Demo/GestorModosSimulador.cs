@@ -10,7 +10,9 @@ public enum ModoSimulador
     [Tooltip("PROCEDIMIENTO GUIADO: tú operas y la escena te guía paso a paso (marcadores y hologramas).")]
     DemoGuiada,
     [Tooltip("EJECUTAR DEMO: los brazos realizan solos la colecistectomía; tú observas.")]
-    DemoAutomatica
+    DemoAutomatica,
+    [Tooltip("OPERACIÓN MANUAL: haces tú la colecistectomía completa con los mandos del Quest 3, paso a paso (teleoperación de los instrumentos).")]
+    OperacionManual
 }
 
 /// <summary>
@@ -61,7 +63,8 @@ public class GestorModosSimulador : MonoBehaviour
 
     public static string Nombre(ModoSimulador m) =>
         m == ModoSimulador.PracticaLibre ? "Simular operación (VR)" :
-        m == ModoSimulador.DemoAutomatica ? "Ejecutar demo (automática)" : "Procedimiento guiado";
+        m == ModoSimulador.DemoAutomatica ? "Ejecutar demo (automática)" :
+        m == ModoSimulador.OperacionManual ? "Operación manual (Quest 3)" : "Procedimiento guiado";
 
     void Awake()
     {
@@ -117,12 +120,14 @@ public class GestorModosSimulador : MonoBehaviour
     public void ActivarPractica() => AplicarModo(ModoSimulador.PracticaLibre);
     public void ActivarDemo() => AplicarModo(ModoSimulador.DemoGuiada);
     public void ActivarDemoAutomatica() => AplicarModo(ModoSimulador.DemoAutomatica);
+    public void ActivarOperacionManual() => AplicarModo(ModoSimulador.OperacionManual);
 
-    /// <summary>Simular operación -> Ejecutar demo -> Procedimiento guiado -> Simular operación…</summary>
+    /// <summary>Simular operación -> Ejecutar demo -> Operación manual -> Procedimiento guiado -> Simular operación…</summary>
     public void Alternar()
     {
         var siguiente = ModoActual == ModoSimulador.PracticaLibre ? ModoSimulador.DemoAutomatica
-                      : ModoActual == ModoSimulador.DemoAutomatica ? ModoSimulador.DemoGuiada
+                      : ModoActual == ModoSimulador.DemoAutomatica ? ModoSimulador.OperacionManual
+                      : ModoActual == ModoSimulador.OperacionManual ? ModoSimulador.DemoGuiada
                       : ModoSimulador.PracticaLibre;
         AplicarModo(siguiente);
     }
@@ -134,13 +139,15 @@ public class GestorModosSimulador : MonoBehaviour
         ModoActual = modo;
         bool esGuiada = modo == ModoSimulador.DemoGuiada;
         bool esAutomatica = modo == ModoSimulador.DemoAutomatica;
-        bool esDemo = esGuiada || esAutomatica;
+        bool esManual = modo == ModoSimulador.OperacionManual;
+        bool esDemo = esGuiada || esAutomatica || esManual;
 
         foreach (var go in activosSoloEnDemo) if (go != null) go.SetActive(esDemo);
         foreach (var go in activosSoloEnPractica) if (go != null) go.SetActive(!esDemo);
 
         // Primero se detiene lo que no corresponde (la demo automática usa el panel de la guiada)
-        if (!esAutomatica && demoAutomatica != null) demoAutomatica.Detener();
+        // La demo automática y la operación manual comparten componente: al cambiar entre ellas se detiene la anterior
+        if (demoAutomatica != null) demoAutomatica.Detener();
         if (!esGuiada && demo != null && (demoAutomatica == null || !demoAutomatica.Ejecutando)) demo.DetenerDemo();
 
         if (esGuiada)
@@ -153,6 +160,11 @@ public class GestorModosSimulador : MonoBehaviour
             if (demoAutomatica != null) demoAutomatica.Iniciar();
             else Debug.LogWarning("Ejecutar demo seleccionado pero no hay DemoAutomaticaColecistectomia en la escena.");
         }
+        if (esManual)
+        {
+            if (demoAutomatica != null) demoAutomatica.IniciarManual();
+            else Debug.LogWarning("Operación manual seleccionada pero no hay DemoAutomaticaColecistectomia en la escena.");
+        }
 
         Debug.Log($"🩺 Modo del simulador: {Nombre(modo)}");
         ModoCambiado?.Invoke(modo);
@@ -163,12 +175,13 @@ public class GestorModosSimulador : MonoBehaviour
     {
         if (selectorPendiente)
         {
-            const float w = 380f, h = 230f;
+            const float w = 380f, h = 280f;
             Rect r = new Rect((Screen.width - w) / 2f, (Screen.height - h) / 2f, w, h);
             GUILayout.BeginArea(r, "Simulador de Colecistectomía", GUI.skin.window);
             GUILayout.Space(8);
             if (GUILayout.Button("Simular operación (te pones los lentes y operas)", GUILayout.Height(44))) ActivarPractica();
             if (GUILayout.Button("Ejecutar demo (los brazos operan solos)", GUILayout.Height(44))) ActivarDemoAutomatica();
+            if (GUILayout.Button("Operación manual (la haces tú con los mandos)", GUILayout.Height(44))) ActivarOperacionManual();
             if (GUILayout.Button("Procedimiento guiado (operas con guía)", GUILayout.Height(36))) ActivarDemo();
             GUILayout.Label($"También: tecla {teclaAlternar} o botón Menú del mando izquierdo.");
             GUILayout.EndArea();
@@ -179,7 +192,7 @@ public class GestorModosSimulador : MonoBehaviour
         int filas = brazos.Length + (demoAutomatica != null && demoAutomatica.Ejecutando ? 1 : 0);
         GUILayout.BeginArea(new Rect(10, 10, 400, 70 + 22 * filas), GUI.skin.box);
         GUILayout.Label($"Modo: {Nombre(ModoActual)}  [{teclaAlternar}]");
-        if (demoAutomatica != null && demoAutomatica.Ejecutando) GUILayout.Label($"Demo: {demoAutomatica.Fase}");
+        if (demoAutomatica != null && demoAutomatica.Ejecutando) GUILayout.Label($"{(demoAutomatica.ManualActiva ? "Manual" : "Demo")}: {demoAutomatica.Fase}");
         foreach (var b in brazos)
         {
             if (b == null) continue;
